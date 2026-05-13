@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/* Hide scrollbar for mobile horizontal scrolling */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Better touch on mobile */
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Pixelated canvas */
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Safe area for notched phones */
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Prevent pull-to-refresh on mobile during game */
+html, body {
+  overscroll-behavior: none;
+}
+
+/* Animated coin pulse */
+@keyframes coinPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}

@@ -13,11 +13,28 @@ function BcoinIcon({ size = 20 }: { size?: number }) {
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <div className="absolute inset-0 rounded-full bg-yellow-400 shadow-lg shadow-yellow-400/30 animate-[coinPulse_2s_ease-in-out_infinite]" />
-      {/* Animated B letter */}
       <span className="relative z-10 font-black text-yellow-900 text-sm">B</span>
-      {/* Shine */}
       <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/40 to-transparent" />
     </div>
+  );
+}
+
+// ─── HUD Chest Icon (target for flying coins) ───
+function HudChestIcon({ size = 22, pulse = false }: { size?: number; pulse?: boolean }) {
+  return (
+    <svg viewBox="0 0 28 28" width={size} height={size} className={pulse ? 'animate-[chestPulse_0.4s_ease-in-out]' : ''}>
+      {/* Chest body */}
+      <rect x="3" y="13" width="22" height="12" rx="2" fill="#8B5A2B" stroke="#5a3518" strokeWidth="1" />
+      {/* Chest lid */}
+      <path d="M3 13 Q3 7 14 7 Q25 7 25 13" fill="#A0722B" stroke="#5a3518" strokeWidth="1" />
+      {/* Gold trim */}
+      <line x1="3" y1="13" x2="25" y2="13" stroke="#DAA520" strokeWidth="1.5" />
+      {/* Lock */}
+      <rect x="11" y="16" width="6" height="5" rx="1" fill="#DAA520" stroke="#B8860B" strokeWidth="0.5" />
+      <circle cx="14" cy="17.5" r="1" fill="#333" />
+      {/* Highlight */}
+      <path d="M6 9 Q6 8 8 8" stroke="rgba(255,255,255,0.3)" strokeWidth="1" fill="none" />
+    </svg>
   );
 }
 
@@ -170,39 +187,82 @@ function CrateOpenModal({ hero, crateType: _crateType, onClose }: { hero: HeroDa
   );
 }
 
-// ─── Gacha Capsule Card ───
+// ─── Gacha Capsule Card (Gacha ball style like vending machine capsules) ───
 function CapsuleCard({ config, canAfford, onBuy }: {
   config: typeof CRATES.common; canAfford: boolean; onBuy: () => void;
 }) {
-  const [hover, setHover] = useState(false);
   const rarityOrder: Rarity[] = ['super_legendary', 'legendary', 'super_epic', 'epic', 'super_rare', 'rare', 'common'];
+  const baseColor = config.color;
 
   return (
     <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
       onClick={canAfford ? onBuy : undefined}
-      className={`relative bg-gradient-to-b ${config.bgGradient} rounded-xl p-3 border-2 cursor-pointer transition-all select-none
-        ${canAfford ? 'border-white/20 hover:border-white/50 hover:scale-105 active:scale-95' : 'border-gray-700 opacity-50 cursor-not-allowed'}`}
+      className={`relative bg-gradient-to-b from-gray-800/90 to-gray-900/95 rounded-xl p-3 border-2 cursor-pointer transition-all select-none flex flex-col items-center
+        ${canAfford ? 'border-white/20 hover:border-white/50 hover:scale-105 active:scale-95 hover:shadow-lg hover:shadow-white/5' : 'border-gray-700 opacity-50 cursor-not-allowed'}`}
     >
-      <div className="text-center">
-        <div className="text-3xl mb-1">{config.emoji}</div>
-        <p className="text-white text-xs font-bold">{config.name}</p>
-        <div className="flex items-center justify-center gap-1 mt-1">
-          <BcoinIcon size={14} />
-          <span className="text-yellow-400 text-sm font-bold">{config.price}</span>
-        </div>
+      {/* Gacha Capsule Ball SVG - looks like a real round capsule toy */}
+      <svg viewBox="0 0 100 120" width="80" height="96" className="mb-2 drop-shadow-lg">
+        {/* Drop shadow */}
+        <ellipse cx="50" cy="112" rx="24" ry="5" fill="rgba(0,0,0,0.25)" />
+
+        {/* Bottom half - solid colored plastic */}
+        <path d="M18 65 Q18 105 50 105 Q82 105 82 65 L82 60 Q82 58 80 58 L20 58 Q18 58 18 60 Z" fill={baseColor} />
+        {/* Bottom highlight */}
+        <path d="M25 70 Q25 95 50 100 Q75 95 75 70" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+        {/* Bottom inner shadow at seam */}
+        <path d="M20 60 Q50 62 80 60" fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="1" />
+
+        {/* Top half - clear transparent dome */}
+        <path d="M18 60 Q18 14 50 10 Q82 14 82 60 Z" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" />
+
+        {/* Seam ring around middle */}
+        <ellipse cx="50" cy="60" rx="32" ry="4" fill="none" stroke="rgba(200,200,200,0.4)" strokeWidth="2" />
+        {/* Inner seam shadow */}
+        <ellipse cx="50" cy="61" rx="31" ry="3.5" fill="none" stroke="rgba(0,0,0,0.15)" strokeWidth="1" />
+
+        {/* Glass shine - big highlight arc */}
+        <path d="M32 28 Q35 18 48 16" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="3" strokeLinecap="round" />
+        <path d="M30 36 Q32 28 38 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round" />
+
+        {/* Small sparkle dots on glass */}
+        <circle cx="65" cy="30" r="1.5" fill="rgba(255,255,255,0.35)" />
+        <circle cx="70" cy="45" r="1" fill="rgba(255,255,255,0.2)" />
+
+        {/* Mystery toy silhouette inside the dome */}
+        <circle cx="50" cy="44" r="10" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
+        {/* Question mark */}
+        <text x="50" y="49" textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize="16" fontWeight="900" fontFamily="sans-serif">?</text>
+
+        {/* Bottom half color gradient overlay */}
+        <defs>
+          <linearGradient id={`grad-${config.name.replace(/\s/g,'')}`} x1="0" y1="60" x2="0" y2="105">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.1)" />
+            <stop offset="40%" stopColor="rgba(0,0,0,0)" />
+            <stop offset="100%" stopColor="rgba(0,0,0,0.15)" />
+          </linearGradient>
+        </defs>
+        <path d="M18 65 Q18 105 50 105 Q82 105 82 65 L82 60 Q82 58 80 58 L20 58 Q18 58 18 60 Z" fill={`url(#grad-${config.name.replace(/\s/g,'')})`} />
+
+        {/* Small embossed logo area on bottom */}
+        <circle cx="50" cy="82" r="8" fill="rgba(0,0,0,0.08)" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5" />
+        <text x="50" y="86" textAnchor="middle" fill="rgba(255,255,255,0.2)" fontSize="8" fontWeight="bold" fontFamily="sans-serif">B</text>
+      </svg>
+
+      <p className="text-white text-xs font-bold text-center leading-tight">{config.name}</p>
+      <div className="flex items-center justify-center gap-1.5 mt-1">
+        <BcoinIcon size={14} />
+        <span className="text-yellow-400 text-sm font-bold">{config.price}</span>
       </div>
-      {hover && (
-        <div className="absolute z-20 left-1/2 -translate-x-1/2 bottom-full mb-2 bg-gray-900 border border-gray-700 rounded-lg p-2 min-w-[160px] text-xs shadow-xl">
-          {rarityOrder.map(r => (
-            <div key={r} className="flex justify-between gap-2">
-              <span style={{ color: RARITY_CONFIG[r].colors.primary }}>{RARITY_CONFIG[r].label}</span>
-              <span className="text-gray-400">{config.probabilities[r]}%</span>
-            </div>
-          ))}
-        </div>
-      )}
+
+      {/* Always visible probabilities */}
+      <div className="mt-2 w-full space-y-[2px]">
+        {rarityOrder.filter(r => config.probabilities[r] > 0).map(r => (
+          <div key={r} className="flex justify-between items-center px-1">
+            <span className="text-[9px] leading-tight" style={{ color: RARITY_CONFIG[r].colors.primary }}>{RARITY_CONFIG[r].label}</span>
+            <span className="text-[9px] text-gray-400 leading-tight">{config.probabilities[r]}%</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -340,27 +400,27 @@ function HeroStatusMini({ hero, onSwap }: { hero: { id: string; name: string; st
   const staminaLow = ratio < 0.45;
 
   return (
-    <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-800/50 border border-gray-700/50">
-      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: config.colors.primary }}>
-        <span className="text-xs"><HeadIcon headType={hero.headType} size="text-xs" /></span>
+    <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-gray-800/50 border border-gray-700/50">
+      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: config.colors.primary }}>
+        <span className="text-sm"><HeadIcon headType={hero.headType} size="text-sm" /></span>
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1">
-          <span className="text-white text-xs font-bold truncate">{hero.name}</span>
-          <span className="text-xs">{stateIcons[hero.state] || '❓'}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-white text-sm font-bold truncate">{hero.name}</span>
+          <span className="text-sm">{stateIcons[hero.state] || '❓'}</span>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
             <div className="h-full rounded-full transition-all" style={{
               width: `${Math.max(0, ratio * 100)}%`,
               backgroundColor: ratio > 0.5 ? '#4CAF50' : ratio > 0.25 ? '#FF9800' : '#F44336',
             }} />
           </div>
-          <span className="text-xs text-gray-400 w-8 text-right">{Math.round(hero.stamina)}</span>
+          <span className="text-sm text-gray-400 w-10 text-right">{Math.round(hero.stamina)}</span>
         </div>
       </div>
       {onSwap && staminaLow && (
-        <button onClick={() => onSwap(hero.id)} className="text-xs px-1.5 py-0.5 bg-yellow-600 hover:bg-yellow-500 rounded text-white shrink-0">🔄</button>
+        <button onClick={() => onSwap(hero.id)} className="text-sm px-2 py-1 bg-yellow-600 hover:bg-yellow-500 rounded text-white shrink-0 font-bold">🔄</button>
       )}
     </div>
   );
@@ -394,6 +454,12 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
   const bcoinBeforeMapRef = useRef(0);
   const [swapHeroId, setSwapHeroId] = useState<string | null>(null);
   const completionHandledRef = useRef(false);
+
+  // Flying coins animation state
+  const [flyingCoins, setFlyingCoins] = useState<Array<{ id: number; amount: number }>>([]);
+  const prevBcoinRef = useRef(0);
+  const coinIdRef = useRef(0);
+  const [chestPulse, setChestPulse] = useState(false);
 
   const teamRef = useRef(team);
   teamRef.current = team;
@@ -442,6 +508,20 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
           heroes: state.heroes.map(h => ({ id: h.id, name: h.name, stamina: h.stamina, maxStamina: h.maxStamina, state: h.state, rarity: h.rarity, headType: h.headType })),
         });
         setUnclaimedBcoin(state.bcoinCollected);
+        // Track BCOIN changes for flying coin animation
+        const bcoinDelta = state.bcoinCollected - prevBcoinRef.current;
+        if (bcoinDelta > 0) {
+          prevBcoinRef.current = state.bcoinCollected;
+          const newId = ++coinIdRef.current;
+          setFlyingCoins(prev => [...prev, { id: newId, amount: bcoinDelta }]);
+          setChestPulse(true);
+          setTimeout(() => setChestPulse(false), 400);
+          setTimeout(() => {
+            setFlyingCoins(prev => prev.filter(c => c.id !== newId));
+          }, 1200);
+        } else if (bcoinDelta < 0) {
+          prevBcoinRef.current = state.bcoinCollected;
+        }
         const brokenDrops = state.heroDrops.filter(d => d.collected);
         if (brokenDrops.length > 0 && engineRef.current) {
           const droppedHeroes = engineRef.current.collectHeroDrops();
@@ -513,33 +593,34 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
 
   return (
     <div className="h-screen flex flex-col bg-gray-950 text-white overflow-hidden">
-      {/* Top HUD */}
-      <div className="flex items-center justify-between px-3 py-2 bg-gray-900/90 border-b border-gray-800 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <BcoinIcon size={18} />
-            <span className="text-yellow-400 font-bold">{hudData.bcoin}</span>
+      {/* Top HUD - LARGE FONTS */}
+      <div className="flex items-center justify-between px-4 py-3 bg-gray-900/90 border-b border-gray-800 shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 bg-gray-800/60 rounded-full px-3 py-1 border border-yellow-500/20">
+            <HudChestIcon size={26} pulse={chestPulse} />
+            <BcoinIcon size={20} />
+            <span className="text-yellow-400 font-black text-lg">{hudData.bcoin}</span>
           </div>
-          <div className="text-xs text-gray-400">
+          <div className="text-sm text-gray-400">
             📦 {hudData.chests}/{hudData.totalChests}
           </div>
-          <div className="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+          <div className="w-20 h-2.5 bg-gray-700 rounded-full overflow-hidden">
             <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${Math.min(100, progress)}%` }} />
           </div>
         </div>
-        <div className="text-sm font-bold">
+        <div className="text-lg font-bold">
           🗺️ <span className="text-blue-400">{hudData.mapNumber}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="text-xs text-gray-400">
+        <div className="flex items-center gap-3">
+          <div className="text-sm text-gray-400">
             ⏱️ {formatTime(hudData.time)}
           </div>
           {unclaimedBcoin >= 50 && (
-            <button onClick={handleClaim} className="text-xs px-2 py-1 bg-yellow-600 hover:bg-yellow-500 rounded-full font-bold animate-pulse">
-              💰 Coletar
+            <button onClick={handleClaim} className="text-sm px-4 py-2 bg-yellow-600 hover:bg-yellow-500 rounded-full font-bold animate-pulse shadow-lg shadow-yellow-500/30">
+              💰 Coletar ({unclaimedBcoin})
             </button>
           )}
-          <button onClick={handleGoHome} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded-full">🏠</button>
+          <button onClick={handleGoHome} className="text-sm px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-full">🏠 Home</button>
         </div>
       </div>
 
@@ -550,35 +631,35 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
           {showMapComplete && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/60">
               <div className="text-center animate-bounce">
-                <div className="text-5xl">🏆</div>
-                <p className="text-yellow-400 font-black text-2xl mt-2">Mapa {hudData.mapNumber} Completo!</p>
-                <p className="text-yellow-300 text-lg">+{lastMapBcoin} 🪙 BCOIN</p>
-                <p className="text-gray-400 text-sm mt-2">Próximo mapa em 3s...</p>
+                <div className="text-7xl">🏆</div>
+                <p className="text-yellow-400 font-black text-3xl mt-3">Mapa {hudData.mapNumber} Completo!</p>
+                <p className="text-yellow-300 text-xl">+{lastMapBcoin} 🪙 BCOIN</p>
+                <p className="text-gray-400 text-base mt-2">Próximo mapa em 3s...</p>
               </div>
             </div>
           )}
         </div>
 
         {/* Side panel - Desktop */}
-        <div className="hidden lg:flex flex-col w-52 bg-gray-900/80 border-l border-gray-800 p-2 gap-1 overflow-y-auto">
-          <div className="text-sm font-bold text-center mb-1">
+        <div className="hidden lg:flex flex-col w-64 bg-gray-900/80 border-l border-gray-800 p-3 gap-2 overflow-y-auto">
+          <div className="text-base font-bold text-center mb-1">
             ⚔️ Time ({hudData.heroes.length})
           </div>
           {hudData.heroes.map((hero) => (
             <HeroStatusMini key={hero.id} hero={hero} onSwap={setSwapHeroId} />
           ))}
-          <div className="mt-auto text-xs text-gray-600 text-center pt-2 border-t border-gray-800">
+          <div className="mt-auto text-sm text-gray-600 text-center pt-2 border-t border-gray-800">
             Modo automático
           </div>
         </div>
       </div>
 
       {/* Bottom bar - Mobile hero status */}
-      <div className="lg:hidden flex gap-1 px-2 py-1 bg-gray-900/90 border-t border-gray-800 overflow-x-auto scrollbar-hide shrink-0">
+      <div className="lg:hidden flex gap-2 px-3 py-2 bg-gray-900/90 border-t border-gray-800 overflow-x-auto scrollbar-hide shrink-0">
         {hudData.heroes.map((hero) => (
           <div key={hero.id} className="flex flex-col items-center shrink-0" onClick={() => hero.stamina / hero.maxStamina < 0.45 && setSwapHeroId(hero.id)}>
-            <span className="text-lg"><HeadIcon headType={hero.headType} size="text-lg" /></span>
-            <div className="w-8 h-1 bg-gray-700 rounded-full overflow-hidden">
+            <span className="text-2xl"><HeadIcon headType={hero.headType} size="text-2xl" /></span>
+            <div className="w-10 h-1.5 bg-gray-700 rounded-full overflow-hidden">
               <div className="h-full rounded-full" style={{
                 width: `${Math.max(0, (hero.stamina / hero.maxStamina) * 100)}%`,
                 backgroundColor: hero.stamina / hero.maxStamina > 0.5 ? '#4CAF50' : hero.stamina / hero.maxStamina > 0.25 ? '#FF9800' : '#F44336',
@@ -587,6 +668,22 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
           </div>
         ))}
       </div>
+
+      {/* Flying coins animation overlay */}
+      {flyingCoins.map(coin => (
+        <div key={coin.id} className="fixed pointer-events-none z-[100]"
+          style={{
+            left: '50%',
+            top: '55%',
+            animation: 'flyCoinToChest 1.1s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+          }}>
+          <div className="flex items-center gap-1 bg-yellow-900/70 rounded-full px-2.5 py-1 border border-yellow-400/60 shadow-lg shadow-yellow-500/30"
+            style={{ transform: 'translate(-50%, -50%)' }}>
+            <span className="text-yellow-300 text-sm">🪙</span>
+            <span className="text-yellow-300 text-sm font-black">+{coin.amount}</span>
+          </div>
+        </div>
+      ))}
 
       {/* Swap Modal */}
       {swapHeroId && hudData.heroes.find(h => h.id === swapHeroId) && (

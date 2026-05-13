@@ -62,9 +62,9 @@ export class GameEngine {
           if (r < 0.55) {
             const isChest = Math.random() < 0.08;
             if (isChest) {
-              map[y][x] = { type: 'chest', hp: 2, maxHp: 2, bcoinValue: randomInt(2, 8) };
+              map[y][x] = { type: 'chest', hp: 5, maxHp: 5, bcoinValue: randomInt(1, 3) };
             } else {
-              map[y][x] = { type: 'block', hp: 1 + Math.floor(Math.random() * 2), maxHp: 1 + Math.floor(Math.random() * 2), bcoinValue: randomInt(0, 2) };
+              map[y][x] = { type: 'block', hp: 1 + Math.floor(Math.random() * 2), maxHp: 1 + Math.floor(Math.random() * 2), bcoinValue: randomInt(0, 1) };
             }
           } else {
             map[y][x] = { type: 'empty', hp: 0, maxHp: 0, bcoinValue: 0 };
@@ -352,7 +352,9 @@ export class GameEngine {
         mapCell.hp -= bomb.power;
         if (mapCell.hp <= 0) {
           const mult = hero?.hasDoubleCoins ? 2 : 1;
-          const amount = mapCell.bcoinValue * mult;
+          // Random chance to get BCOIN: chest 55%, block 20%
+          const dropChance = mapCell.type === 'chest' ? 0.55 : 0.20;
+          const amount = Math.random() < dropChance ? mapCell.bcoinValue * mult : 0;
           this.state.bcoinCollected += amount;
           if (mapCell.type === 'chest') this.state.chestsOpened++;
           else this.state.blocksDestroyed++;
@@ -360,7 +362,7 @@ export class GameEngine {
           if (amount > 0) {
             this.state.particles.push({
               x: cell.x + 0.5, y: cell.y + 0.2, vx: 0, vy: -1.5, life: 1.5, maxLife: 1.5,
-              color: '#FFD700', size: 14, type: 'text', text: `+${amount * mult}`,
+              color: '#FFD700', size: 14, type: 'text', text: `+${amount}`,
             });
             for (let i = 0; i < 4; i++) {
               this.state.particles.push({
@@ -382,7 +384,7 @@ export class GameEngine {
           if (drop) {
             this.state.heroDrops.push({
               x: cell.x, y: cell.y, hero: drop, timer: 30, maxTimer: 30,
-              hp: 6, maxHp: 6, collected: false,
+              hp: 15, maxHp: 15, collected: false,
             });
           }
           mapCell.type = 'empty'; mapCell.hp = 0; mapCell.maxHp = 0;

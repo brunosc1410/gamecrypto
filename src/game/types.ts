@@ -12,7 +12,7 @@ export const EXPLOSION_DURATION = 0.6;
 export const STAMINA_DRAIN = 2;
 export const STAMINA_RECOVERY = 5;
 export const MAX_TEAM_SIZE = 8;
-export const STARTING_BCOIN = 500;
+export const STARTING_BCOIN = 2000;
 
 export const ALL_HEADS: HeadType[] = ['frog', 'ninja', 'cowboy', 'vampire', 'werewolf', 'wizard', 'dragon', 'fox', 'bear', 'skeleton', 'cat', 'panda'];
 

@@ -1,69 +1,58 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { GameEngine } from './game/engine';
 import { GameRenderer } from './game/renderer';
 import {
-  generateStartingTeam, rollCrate, RARITY_CONFIG,
-  CRATES, MAX_TEAM_SIZE, STARTING_BCOIN,
-  HEAD_EMOJIS, HEAD_LABELS,
   type HeroData, type Rarity, type CrateType, type HeadType,
+  CRATES, RARITY_CONFIG, MAX_TEAM_SIZE, STARTING_BCOIN,
+  HEAD_EMOJIS, HEAD_LABELS,
+  generateStartingTeam, rollCrate,
 } from './game/types';
 
-// ─── Stat Bar ───
-function StatBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
-  const ratio = Math.min(value / max, 1);
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className="w-14 text-gray-300 text-right text-xs">{label}</span>
-      <div className="flex-1 h-2.5 bg-gray-700 rounded-full overflow-hidden">
-        <div className="h-full rounded-full transition-all duration-300" style={{ width: `${ratio * 100}%`, backgroundColor: color }} />
-      </div>
-      <span className="w-6 text-gray-400 font-mono text-xs">{value}</span>
-    </div>
-  );
-}
-
-// ─── Animated BCOIN Coin ───
-function AnimatedCoin({ size = 48 }: { size?: number }) {
+// ─── Bcoin Icon ───
+function BcoinIcon({ size = 20 }: { size?: number }) {
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
-      {/* Outer ring */}
-      <div className="absolute inset-0 rounded-full border-2 border-yellow-600 shadow-lg shadow-yellow-900/30"
-        style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)' }} />
-      {/* Inner circle */}
-      <div className="absolute rounded-full"
-        style={{
-          inset: size * 0.12,
-          background: 'linear-gradient(135deg, #FFE066, #FFD700, #CC9900)',
-        }} />
+      <div className="absolute inset-0 rounded-full bg-yellow-400 shadow-lg shadow-yellow-400/30 animate-[coinPulse_2s_ease-in-out_infinite]" />
       {/* Animated B letter */}
-      <span className="relative z-10 font-black text-yellow-900 select-none"
-        style={{
-          fontSize: size * 0.4,
-          textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-          animation: 'coinPulse 2s ease-in-out infinite',
-        }}>
-        B
-      </span>
+      <span className="relative z-10 font-black text-yellow-900 text-sm">B</span>
       {/* Shine */}
-      <div className="absolute rounded-full bg-white/20"
-        style={{
-          width: size * 0.3, height: size * 0.2,
-          top: size * 0.12, left: size * 0.15,
-          transform: 'rotate(-30deg)',
-        }} />
+      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/40 to-transparent" />
     </div>
   );
 }
 
-function HeroEmoji({ headType, size = 'text-2xl' }: { headType: HeadType; size?: string }) {
-  return <span className={size}>{HEAD_EMOJIS[headType]}</span>;
+// ─── Head Icon (FIX #1: Custom SVG for ninja instead of unsupported emoji) ───
+function HeadIcon({ headType, size = 'text-2xl' }: { headType: HeadType; size?: string }) {
+  if (headType === 'ninja') {
+    return (
+      <svg viewBox="0 0 36 36" className={`${size} inline-block align-middle`} style={{ width: '1.2em', height: '1.2em' }}>
+        {/* Head */}
+        <circle cx="18" cy="20" r="12" fill="#1a1a2a" />
+        {/* Headband */}
+        <rect x="4" y="15" width="28" height="5" rx="2" fill="#cc2222" />
+        {/* Headband tail */}
+        <path d="M4 17.5 Q0 17 -1 12 Q-2 7 -4 4" stroke="#cc2222" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        <path d="M4 17.5 Q0 18 -2 22 Q-3 26 -5 27" stroke="#cc2222" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.6" />
+        {/* Eyes */}
+        <ellipse cx="12" cy="18.5" rx="4" ry="2.8" fill="white" />
+        <ellipse cx="24" cy="18.5" rx="4" ry="2.8" fill="white" />
+        <circle cx="12" cy="18.5" r="1.8" fill="#111" />
+        <circle cx="24" cy="18.5" r="1.8" fill="#111" />
+        {/* Eye highlights */}
+        <circle cx="11" cy="17.5" r="0.7" fill="rgba(255,255,255,0.6)" />
+        <circle cx="23" cy="17.5" r="0.7" fill="rgba(255,255,255,0.6)" />
+        {/* Shadow under headband */}
+        <rect x="6" y="20" width="24" height="1" fill="rgba(0,0,0,0.15)" />
+      </svg>
+    );
+  }
+  return <span className={`${size} inline-block align-middle`}>{HEAD_EMOJIS[headType]}</span>;
 }
 
 function RarityBadge({ rarity }: { rarity: Rarity }) {
   const config = RARITY_CONFIG[rarity];
   return (
-    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
-      style={{ color: config.colors.helmet, backgroundColor: `${config.colors.primary}33`, border: `1px solid ${config.colors.primary}66` }}>
+    <span style={{ color: config.colors.primary }} className="text-xs font-bold">
       {config.label}
     </span>
   );
@@ -88,49 +77,49 @@ function HeroCard({ hero, selected, onToggle, showToggle }: {
   };
 
   return (
-    <div onClick={showToggle ? onToggle : undefined}
-      className={`relative border-2 ${borderColors[hero.rarity]} ${selected ? 'ring-2 ring-green-400 ring-offset-1 ring-offset-gray-900 bg-green-900/20' : ''} ${showToggle ? 'cursor-pointer' : ''} rounded-xl bg-gradient-to-b ${bgColors[hero.rarity]} p-2 sm:p-2.5 w-[44vw] sm:w-40 max-w-[180px] transition-all duration-200 hover:shadow-lg hover:shadow-black/30 active:scale-95 ${hero.rarity === 'legendary' ? 'animate-pulse' : ''}`}
-      style={hero.rarity === 'legendary' ? { boxShadow: '0 0 20px rgba(251,191,36,0.15)' } : hero.rarity === 'epic' ? { boxShadow: '0 0 15px rgba(234,88,12,0.1)' } : undefined}
+    <div
+      onClick={onToggle}
+      className={`relative bg-gradient-to-b ${bgColors[hero.rarity]} border-2 ${borderColors[hero.rarity]} rounded-xl p-3 cursor-pointer transition-all select-none ${selected ? 'ring-2 ring-green-400' : ''}`}
     >
-      {selected && <div className="absolute top-1 right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg">✓</div>}
-      <div className="relative z-10">
-        <div className="flex justify-center mb-1">
-          <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-lg sm:text-xl shadow-lg transition-transform"
-            style={{ background: `linear-gradient(135deg, ${config.colors.primary}, ${config.colors.secondary})`, boxShadow: hero.rarity === 'legendary' ? '0 0 15px rgba(251,191,36,0.4)' : hero.rarity === 'epic' ? '0 0 10px rgba(234,88,12,0.3)' : 'none' }}>
-            <HeroEmoji headType={hero.headType} size="text-xl" />
-          </div>
-        </div>
-        <h3 className="text-center text-white font-bold text-sm truncate">{hero.name}</h3>
-        <div className="text-center text-gray-400 text-[10px]">{HEAD_LABELS[hero.headType]}</div>
-        <div className="flex justify-center gap-0.5 my-0.5">
+      {selected && <div className="absolute top-1 right-1 text-green-400 text-sm">✓</div>}
+      <div className="flex flex-col items-center gap-1">
+        <HeadIcon headType={hero.headType} />
+        <span className="text-white text-sm font-bold text-center leading-tight">{hero.name}</span>
+        <span className="text-gray-400 text-xs">{HEAD_LABELS[hero.headType]}</span>
+        <div className="flex gap-0.5">
           {Array.from({ length: 7 }).map((_, i) => (
-            <span key={i} className={`text-[10px] ${i < config.stars ? 'text-yellow-400' : 'text-gray-600'}`}>★</span>
+            <span key={i} className={`text-xs ${i < config.stars ? 'text-yellow-400' : 'text-gray-700'}`}>★</span>
           ))}
         </div>
-        <div className="flex justify-center mb-1.5"><RarityBadge rarity={hero.rarity} /></div>
-        <div className="space-y-0.5">
-          <StatBar label="Poder" value={hero.power} max={12} color="#EF4444" />
-          <StatBar label="Stamina" value={hero.maxStamina} max={360} color="#22C55E" />
-          <StatBar label="Veloc." value={Math.round(hero.speed * 10)} max={45} color="#3B82F6" />
-          <StatBar label="Bombas" value={hero.bombNum} max={4} color="#F59E0B" />
-          <StatBar label="Alcance" value={hero.bombRange} max={8} color="#8B5CF6" />
+        <RarityBadge rarity={hero.rarity} />
+        <div className="grid grid-cols-2 gap-x-2 text-xs text-gray-400 w-full">
+          <span>⚡{hero.power}</span>
+          <span>❤️{hero.maxStamina}</span>
+          <span>💣{hero.bombNum}</span>
+          <span>📏{hero.bombRange}</span>
         </div>
         {hero.abilities.length > 0 && (
-          <div className="mt-1.5 pt-1.5 border-t border-gray-700/50">
+          <div className="mt-1 space-y-0.5 w-full">
             {hero.abilities.map((a, i) => (
-              <div key={i} className="text-[9px] text-cyan-400 flex items-center gap-0.5"><span>✦</span> {a}</div>
+              <div key={i} className="text-xs text-cyan-400 truncate">✦ {a}</div>
             ))}
           </div>
         )}
       </div>
+      {showToggle && (
+        <div className="absolute top-1 left-1">
+          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center text-xs ${selected ? 'bg-green-500 border-green-400 text-white' : 'border-gray-500'}`}>
+            {selected ? '✓' : ''}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // ─── Crate Open Modal ───
-function CrateOpenModal({ hero, crateType, onClose }: { hero: HeroData; crateType: CrateType; onClose: () => void }) {
+function CrateOpenModal({ hero, crateType: _crateType, onClose }: { hero: HeroData; crateType: CrateType; onClose: () => void }) {
   const [phase, setPhase] = useState<'shaking' | 'revealing' | 'showing'>('shaking');
-  const crateConfig = CRATES[crateType];
   const config = RARITY_CONFIG[hero.rarity];
 
   useEffect(() => {
@@ -140,56 +129,40 @@ function CrateOpenModal({ hero, crateType, onClose }: { hero: HeroData; crateTyp
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-gray-800 rounded-2xl p-6 max-w-sm w-full text-center border border-gray-700 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={onClose}>
+      <div className="bg-gray-900 rounded-2xl p-8 max-w-sm w-full mx-4 text-center" onClick={e => e.stopPropagation()}>
         {phase === 'shaking' && (
-          <div className="flex flex-col items-center py-12">
-            <div className="w-32 h-32 rounded-2xl flex items-center justify-center text-6xl"
-              style={{ background: `linear-gradient(135deg, ${crateConfig.color}, ${crateConfig.color}88)`, animation: 'bounce 0.4s infinite alternate' }}>
-              📦
-            </div>
-            <p className="text-gray-300 mt-4 animate-pulse text-lg">Abrindo baú...</p>
+          <div className="flex flex-col items-center gap-4 animate-bounce">
+            <div className="text-6xl">📦</div>
+            <p className="text-white text-lg">Abrindo baú...</p>
           </div>
         )}
         {phase === 'revealing' && (
-          <div className="flex flex-col items-center py-8">
-            <div className="w-28 h-28 rounded-full flex items-center justify-center text-5xl animate-pulse"
-              style={{ background: `linear-gradient(135deg, ${config.colors.primary}, ${config.colors.secondary})`, boxShadow: `0 0 60px ${config.colors.glow}, 0 0 120px ${config.colors.glow}` }}>
-              <HeroEmoji headType={hero.headType} size="text-5xl" />
-            </div>
-          </div>
+          <div className="w-24 h-24 mx-auto rounded-full animate-ping" style={{ background: config.colors.glow }} />
         )}
         {phase === 'showing' && (
-          <div className="flex flex-col items-center">
-            <div className="mb-2 text-sm text-gray-400">Você conseguiu:</div>
-            <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl mb-3"
-              style={{ background: `linear-gradient(135deg, ${config.colors.primary}, ${config.colors.secondary})`, boxShadow: `0 0 30px ${config.colors.glow}` }}>
-              <HeroEmoji headType={hero.headType} size="text-4xl" />
-            </div>
-            <h2 className="text-xl font-black text-white mb-1">{hero.name}</h2>
-            <div className="flex justify-center gap-0.5 mb-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <span key={i} className={`text-sm ${i < config.stars ? 'text-yellow-400' : 'text-gray-600'}`}>★</span>
-              ))}
-            </div>
-            <RarityBadge rarity={hero.rarity} />
-            <div className="w-full mt-4 space-y-1">
-              <StatBar label="Poder" value={hero.power} max={12} color="#EF4444" />
-              <StatBar label="Stamina" value={hero.maxStamina} max={360} color="#22C55E" />
-              <StatBar label="Veloc." value={Math.round(hero.speed * 10)} max={45} color="#3B82F6" />
-              <StatBar label="Bombas" value={hero.bombNum} max={4} color="#F59E0B" />
-              <StatBar label="Alcance" value={hero.bombRange} max={8} color="#8B5CF6" />
-            </div>
-            {hero.abilities.length > 0 && (
-              <div className="mt-3 pt-2 border-t border-gray-700 w-full">
-                <div className="text-[9px] text-gray-400 font-bold mb-1">HABILIDADES</div>
-                {hero.abilities.map((a, i) => <div key={i} className="text-xs text-cyan-400">✦ {a}</div>)}
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-gray-400">Você conseguiu:</p>
+            <div className="bg-gradient-to-b from-gray-800 to-gray-900 border-2 rounded-xl p-4" style={{ borderColor: config.colors.primary }}>
+              <HeadIcon headType={hero.headType} size="text-4xl" />
+              <p className="text-white font-bold text-lg mt-2">{hero.name}</p>
+              <div className="flex justify-center gap-0.5 mt-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <span key={i} className={`text-sm ${i < config.stars ? 'text-yellow-400' : 'text-gray-700'}`}>★</span>
+                ))}
               </div>
-            )}
-            <button onClick={onClose}
-              className="mt-4 px-8 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-lg font-bold transition-all hover:scale-105 shadow-lg">
-              Coletar! ✨
-            </button>
+              <RarityBadge rarity={hero.rarity} />
+              <div className="mt-2 text-xs text-gray-400">
+                ⚡{hero.power} ❤️{hero.maxStamina} 💣{hero.bombNum} 📏{hero.bombRange}
+              </div>
+              {hero.abilities.length > 0 && (
+                <div className="mt-2 space-y-0.5">
+                  <p className="text-xs text-gray-500 font-bold">HABILIDADES</p>
+                  {hero.abilities.map((a, i) => <div key={i} className="text-xs text-cyan-400">✦ {a}</div>)}
+                </div>
+              )}
+            </div>
+            <button onClick={onClose} className="mt-4 px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-full font-bold transition">Coletar!</button>
           </div>
         )}
       </div>
@@ -205,85 +178,36 @@ function CapsuleCard({ config, canAfford, onBuy }: {
   const rarityOrder: Rarity[] = ['super_legendary', 'legendary', 'super_epic', 'epic', 'super_rare', 'rare', 'common'];
 
   return (
-    <button
-      onClick={canAfford ? onBuy : undefined} disabled={!canAfford}
-      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-      onTouchStart={() => setHover(true)} onTouchEnd={() => setHover(false)}
-      className={`relative flex flex-col items-center rounded-2xl p-3 transition-all duration-300 snap-center shrink-0 w-[170px] sm:w-auto
-        ${canAfford ? 'cursor-pointer active:scale-95' : 'opacity-40 cursor-not-allowed'}
-        ${hover && canAfford ? 'scale-105 -translate-y-1 shadow-2xl' : ''}`}
-      style={{
-        background: `linear-gradient(180deg, ${config.color}40 0%, ${config.color}20 100%)`,
-        border: `2px solid ${config.color}${canAfford ? 'cc' : '44'}`,
-        boxShadow: hover && canAfford ? `0 8px 32px ${config.color}33` : 'none',
-      }}
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onClick={canAfford ? onBuy : undefined}
+      className={`relative bg-gradient-to-b ${config.bgGradient} rounded-xl p-3 border-2 cursor-pointer transition-all select-none
+        ${canAfford ? 'border-white/20 hover:border-white/50 hover:scale-105 active:scale-95' : 'border-gray-700 opacity-50 cursor-not-allowed'}`}
     >
-      {/* Capsule */}
-      <div className="relative w-28 h-28 mx-auto mb-2">
-        {/* Capsule top (colored) */}
-        <div className="absolute inset-0 rounded-t-full rounded-b-[40%] overflow-hidden" style={{ background: `linear-gradient(180deg, ${config.color}, ${config.color}aa)` }}>
-          <div className="absolute inset-0 bg-gradient-to-b from-white/25 to-transparent" />
-          {/* Shine */}
-          <div className="absolute top-2 left-3 w-8 h-4 bg-white/30 rounded-full -rotate-12" />
-        </div>
-        {/* Capsule bottom (transparent) */}
-        <div className="absolute bottom-0 left-1 right-1 h-14 rounded-b-full bg-gradient-to-b from-gray-800/80 to-gray-900/90 border-2 border-t-0 rounded-t-[1px]"
-          style={{ borderColor: `${config.color}66` }}>
-          {/* Character inside (silhouette) */}
-          <div className="flex items-center justify-center h-full">
-            <span className="text-3xl opacity-60 grayscale contrast-150" style={{ filter: 'brightness(0.6)' }}>
-              {['🐸', '🥷', '🤠', '🧛', '🐺', '🧙', '🐉', '🦊', '🐻', '💀', '🐱', '🐼'][Math.floor(Math.random() * 12)]}
-            </span>
-          </div>
-        </div>
-        {/* Divider line */}
-        <div className="absolute top-1/2 left-1 right-1 h-[3px]" style={{ backgroundColor: config.color }} />
-        {/* Floating animation */}
-        <div className="absolute -top-1 -right-1 text-lg" style={{ animation: 'coinPulse 2s ease-in-out infinite' }}>
-          ✨
+      <div className="text-center">
+        <div className="text-3xl mb-1">{config.emoji}</div>
+        <p className="text-white text-xs font-bold">{config.name}</p>
+        <div className="flex items-center justify-center gap-1 mt-1">
+          <BcoinIcon size={14} />
+          <span className="text-yellow-400 text-sm font-bold">{config.price}</span>
         </div>
       </div>
-
-      {/* Name */}
-      <h3 className="text-white font-bold text-sm mb-1">{config.name}</h3>
-
-      {/* Price */}
-      <div className="flex items-center justify-center gap-1.5 bg-black/30 rounded-full px-3 py-1 mb-2">
-        <AnimatedCoin size={20} />
-        <span className="text-yellow-400 font-black text-sm">{config.price}</span>
-      </div>
-
-      {/* All rarities with % */}
-      <div className="w-full space-y-0.5">
-        {rarityOrder.map(r => {
-          const pct = config.probabilities[r];
-          const rc = RARITY_CONFIG[r];
-          return (
-            <div key={r} className="flex items-center justify-between gap-1 px-1">
-              <div className="flex items-center gap-0.5">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: rc.colors.primary }} />
-                <span className="text-[10px] text-gray-300">{rc.label}</span>
-              </div>
-              <span className={`text-[10px] font-bold ${pct >= 10 ? 'text-yellow-300' : pct > 0 ? 'text-gray-400' : 'text-gray-600'}`}>
-                {pct}%
-              </span>
+      {hover && (
+        <div className="absolute z-20 left-1/2 -translate-x-1/2 bottom-full mb-2 bg-gray-900 border border-gray-700 rounded-lg p-2 min-w-[160px] text-xs shadow-xl">
+          {rarityOrder.map(r => (
+            <div key={r} className="flex justify-between gap-2">
+              <span style={{ color: RARITY_CONFIG[r].colors.primary }}>{RARITY_CONFIG[r].label}</span>
+              <span className="text-gray-400">{config.probabilities[r]}%</span>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Buy indicator */}
-      {canAfford && (
-        <div className="mt-2 w-full py-1.5 rounded-lg text-center text-white font-bold text-xs transition-all"
-          style={{ backgroundColor: `${config.color}88` }}>
-          Comprar
+          ))}
         </div>
       )}
-    </button>
+    </div>
   );
 }
 
-// ─── Collection Screen ───
+// ─── Collection Screen (FIX #2: Grid layout matches capsules) ───
 function CollectionScreen({ bcoin, heroes, hasSavedGame, onBuyCrate, onStartHunt, onResumeGame }: {
   bcoin: number; heroes: HeroData[]; hasSavedGame: boolean;
   onBuyCrate: (type: CrateType) => void;
@@ -291,76 +215,72 @@ function CollectionScreen({ bcoin, heroes, hasSavedGame, onBuyCrate, onStartHunt
   onResumeGame: () => void;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900 flex flex-col items-center relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-white overflow-auto">
       {/* Animated BG */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {Array.from({ length: 20 }).map((_, i) => (
-          <div key={i} className="absolute rounded-full animate-pulse"
-            style={{
-              width: `${3 + (i % 6) * 2}px`, height: `${3 + (i % 6) * 2}px`,
-              background: ['#FFD700', '#4169E1', '#9333EA', '#EF4444', '#22C55E'][i % 5],
-              left: `${(i * 5.3) % 100}%`, top: `${(i * 7.9) % 100}%`,
-              opacity: 0.06, animationDelay: `${i * 0.2}s`, animationDuration: `${2 + (i % 4)}s`,
-            }} />
+          <div key={i} className="absolute rounded-full bg-yellow-500/5 animate-[coinPulse_3s_ease-in-out_infinite]" style={{
+            width: 4 + (i * 7 % 8),
+            height: 4 + (i * 7 % 8),
+            left: `${(i * 17) % 100}%`,
+            top: `${(i * 23) % 100}%`,
+            animationDelay: `${i * 0.3}s`,
+          }} />
         ))}
       </div>
 
-      <div className="relative z-10 flex flex-col items-center w-full max-w-5xl px-3 py-4">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 py-6 space-y-6">
         {/* Title */}
-        <h1 className="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 mb-0.5">
-          💣 Bomber Heroes
-        </h1>
-        <p className="text-indigo-300 text-xs sm:text-sm mb-4">Colete heróis e caçe tesouros!</p>
+        <div className="text-center">
+          <h1 className="text-4xl font-black bg-gradient-to-r from-yellow-300 via-orange-400 to-red-500 bg-clip-text text-transparent">
+            💣 Bomber Heroes
+          </h1>
+        </div>
+        <p className="text-center text-gray-400">Colete heróis e caçe tesouros!</p>
 
         {/* BCOIN */}
-        <div className="bg-gradient-to-r from-yellow-900/40 to-amber-900/40 border border-yellow-600/40 rounded-2xl px-5 sm:px-8 py-3 flex items-center gap-3 mb-5 shadow-lg shadow-yellow-900/20">
-          <AnimatedCoin size={44} />
-          <div>
-            <div className="text-yellow-400 font-black text-xl sm:text-3xl">{bcoin}</div>
-            <div className="text-yellow-600 text-[10px] sm:text-xs font-bold">BCOIN</div>
+        <div className="flex items-center justify-center gap-2">
+          <BcoinIcon />
+          <div className="bg-gray-800/80 rounded-full px-4 py-1.5 flex items-center gap-2 border border-yellow-500/30">
+            <span className="text-yellow-400 font-bold text-lg">{bcoin}</span>
+            <span className="text-yellow-600 text-xs font-semibold">BCOIN</span>
           </div>
         </div>
 
         {/* Resume */}
         {hasSavedGame && (
-          <button onClick={onResumeGame}
-            className="w-full max-w-md mb-4 bg-gradient-to-r from-green-900/60 to-emerald-900/60 border-2 border-green-500/40 rounded-2xl px-4 py-3 flex items-center gap-3 transition-all active:scale-[0.98] shadow-lg shadow-green-900/30 min-h-[50px]">
-            <span className="text-2xl">▶️</span>
-            <div className="text-left flex-1">
-              <div className="text-green-300 font-black text-sm">Continuar Jogo</div>
-              <div className="text-green-500/60 text-[10px]">Mapa e heróis salvos</div>
-            </div>
-            <span className="text-green-400 text-lg">→</span>
-          </button>
+          <div className="text-center">
+            <button onClick={onResumeGame} className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-full font-bold transition shadow-lg shadow-green-500/30">
+              ▶️ Retomar Caça
+            </button>
+          </div>
         )}
 
         {/* Gacha Capsules */}
-        <div className="w-full mb-5">
-          <h2 className="text-white font-bold text-base sm:text-lg mb-2.5 text-center">🏪 Comprar Cápsulas</h2>
-          <div className="flex gap-3 overflow-x-auto px-1 pb-2 snap-x snap-mandatory scrollbar-hide justify-center flex-wrap sm:flex-nowrap">
+        <div>
+          <h2 className="text-xl font-bold text-center mb-3">🏪 Comprar Cápsulas</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
             {(Object.entries(CRATES) as [CrateType, typeof CRATES.common][]).map(([type, cfg]) => (
               <CapsuleCard key={type} config={cfg} canAfford={bcoin >= cfg.price} onBuy={() => onBuyCrate(type)} />
             ))}
           </div>
         </div>
 
-        {/* Collection */}
-        <div className="w-full mb-5">
-          <h2 className="text-white font-bold text-base sm:text-lg mb-2 text-center">⚔️ Coleção ({heroes.length})</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+        {/* FIX #2: Collection grid matches capsules grid (grid-cols-2 sm:grid-cols-4) */}
+        <div>
+          <h2 className="text-xl font-bold text-center mb-3">⚔️ Coleção ({heroes.length})</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
             {heroes.map(h => <HeroCard key={h.id} hero={h} />)}
           </div>
-          {heroes.length === 0 && <p className="text-gray-500 text-center py-6 text-sm">Compre cápsulas para ganhar heróis!</p>}
+          {heroes.length === 0 && <p className="text-center text-gray-500 mt-2">Compre cápsulas para ganhar heróis!</p>}
         </div>
 
         {/* Start */}
-        <button onClick={onStartHunt} disabled={heroes.length === 0}
-          className={`w-full max-w-md px-5 py-3.5 rounded-2xl font-black text-base transition-all shadow-xl mb-6 min-h-[50px]
-            ${heroes.length > 0
-              ? 'bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 text-white hover:scale-[1.02] shadow-red-900/50 active:scale-95'
-              : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}>
-          🏴‍☠️ Nova Caça ao Tesouro!
-        </button>
+        <div className="text-center pb-8">
+          <button onClick={onStartHunt} className="px-8 py-3 bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400 text-white rounded-full font-bold text-lg transition shadow-lg shadow-red-500/30">
+            ⚔️ Iniciar Caça ao Tesouro
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -372,33 +292,41 @@ function TeamSelectScreen({ heroes, selectedIds, onToggle, onStart, onBack }: {
   onToggle: (id: string) => void; onStart: () => void; onBack: () => void;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900 flex flex-col items-center p-4">
-      <h1 className="text-2xl font-black text-white mt-6 mb-2">⚔️ Monte seu Time</h1>
-      <p className="text-indigo-300 text-sm mb-4">Selecione até {MAX_TEAM_SIZE} heróis para a caça ao tesouro</p>
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-white overflow-auto">
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-black bg-gradient-to-r from-blue-300 to-purple-400 bg-clip-text text-transparent">⚔️ Monte seu Time</h1>
+          <p className="text-gray-400 mt-1">Selecione até {MAX_TEAM_SIZE} heróis para a caça ao tesouro</p>
+        </div>
 
-      <div className="flex items-center gap-2 mb-4 bg-gray-800/50 rounded-full px-4 py-2 border border-gray-700">
-        <div className="flex -space-x-1">
-          {Array.from({ length: MAX_TEAM_SIZE }).map((_, i) => (
-            <div key={i} className={`w-5 h-5 rounded-full border-2 ${i < selectedIds.length ? 'bg-green-500 border-green-400' : 'bg-gray-700 border-gray-600'}`} />
+        {/* Slots */}
+        <div className="flex items-center justify-center gap-2">
+          <div className="flex gap-2">
+            {Array.from({ length: MAX_TEAM_SIZE }).map((_, i) => {
+              const sid = selectedIds[i];
+              const hero = sid ? heroes.find(h => h.id === sid) : undefined;
+              return (
+                <div key={i} className={`w-12 h-12 rounded-lg border-2 flex items-center justify-center ${hero ? 'border-green-500 bg-green-900/30' : 'border-gray-700 bg-gray-800/50'}`}>
+                  {hero ? <HeadIcon headType={hero.headType} size="text-lg" /> : <span className="text-gray-600">?</span>}
+                </div>
+              );
+            })}
+          </div>
+          <span className="text-gray-400 font-bold">{selectedIds.length}/{MAX_TEAM_SIZE}</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {heroes.map(hero => (
+            <HeroCard key={hero.id} hero={hero} selected={selectedIds.includes(hero.id)} onToggle={() => onToggle(hero.id)} showToggle />
           ))}
         </div>
-        <span className="text-white font-bold text-sm ml-2">{selectedIds.length}/{MAX_TEAM_SIZE}</span>
-      </div>
 
-      <div className="flex flex-wrap justify-center gap-3 mb-8 max-w-5xl">
-        {heroes.map(hero => (
-          <HeroCard key={hero.id} hero={hero} selected={selectedIds.includes(hero.id)} onToggle={() => onToggle(hero.id)} showToggle />
-        ))}
-      </div>
-
-      <div className="flex gap-4 mb-8">
-        <button onClick={onBack} className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold transition-all active:scale-95">
-          ← Voltar
-        </button>
-        <button onClick={onStart} disabled={selectedIds.length === 0}
-          className={`px-8 py-3 rounded-xl font-bold text-lg transition-all shadow-lg ${selectedIds.length > 0 ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white hover:scale-105 active:scale-95' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}>
-          🏴‍☠️ Começar Caça! ({selectedIds.length} heróis)
-        </button>
+        <div className="flex gap-3 justify-center pb-6">
+          <button onClick={onBack} className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-full font-bold transition">← Voltar</button>
+          <button onClick={onStart} disabled={selectedIds.length === 0} className={`px-6 py-2 rounded-full font-bold transition ${selectedIds.length > 0 ? 'bg-green-600 hover:bg-green-500 text-white' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}>
+            Iniciar ({selectedIds.length})
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -409,35 +337,30 @@ function HeroStatusMini({ hero, onSwap }: { hero: { id: string; name: string; st
   const config = RARITY_CONFIG[hero.rarity];
   const ratio = hero.stamina / hero.maxStamina;
   const stateIcons: Record<string, string> = { idle: '🔍', moving: '🏃', bombing: '💣', fleeing: '💨', waiting: '⏳', resting: '💤' };
-
   const staminaLow = ratio < 0.45;
 
   return (
-    <div className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 border transition-colors ${staminaLow ? 'bg-red-900/30 border-red-700/50' : 'bg-gray-800/80 border-gray-700/50 hover:border-gray-600'}`}>
-      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 shadow-inner"
-        style={{ backgroundColor: config.colors.primary }}>
-        <HeroEmoji headType={hero.headType} size="text-sm" />
+    <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-800/50 border border-gray-700/50">
+      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: config.colors.primary }}>
+        <span className="text-xs"><HeadIcon headType={hero.headType} size="text-xs" /></span>
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <span className="text-white text-sm font-bold truncate">{hero.name}</span>
-          <span className="text-base shrink-0">{stateIcons[hero.state] || '❓'}</span>
+        <div className="flex items-center gap-1">
+          <span className="text-white text-xs font-bold truncate">{hero.name}</span>
+          <span className="text-xs">{stateIcons[hero.state] || '❓'}</span>
         </div>
-        <div className="flex items-center gap-1 mt-1">
-          <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-200" style={{
+        <div className="flex items-center gap-1">
+          <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all" style={{
               width: `${Math.max(0, ratio * 100)}%`,
               backgroundColor: ratio > 0.5 ? '#4CAF50' : ratio > 0.25 ? '#FF9800' : '#F44336',
             }} />
           </div>
-          <span className="text-[10px] text-gray-400 font-mono w-8 text-right">{Math.round(hero.stamina)}</span>
+          <span className="text-xs text-gray-400 w-8 text-right">{Math.round(hero.stamina)}</span>
         </div>
       </div>
       {onSwap && staminaLow && (
-        <button onClick={() => onSwap(hero.id)}
-          className="shrink-0 px-2 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-all active:scale-95 min-w-[44px] min-h-[36px]">
-          ⇄
-        </button>
+        <button onClick={() => onSwap(hero.id)} className="text-xs px-1.5 py-0.5 bg-yellow-600 hover:bg-yellow-500 rounded text-white shrink-0">🔄</button>
       )}
     </div>
   );
@@ -455,8 +378,8 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const rendererRef = useRef<GameRenderer>(new GameRenderer());
-  const animRef = useRef<number>(0);
+  const rendererRef = useRef(new GameRenderer());
+  const animRef = useRef(0);
 
   const [hudData, setHudData] = useState({
     bcoin: 0, chests: 0, totalChests: 0, blocks: 0, totalBlocks: 0,
@@ -472,17 +395,14 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
   const [swapHeroId, setSwapHeroId] = useState<string | null>(null);
   const completionHandledRef = useRef(false);
 
-  // Create engine once (team only used for initial creation)
   const teamRef = useRef(team);
   teamRef.current = team;
   useEffect(() => {
     if (!engineRef.current) {
       engineRef.current = new GameEngine(teamRef.current);
     }
-    // NO cleanup here - game loop effect handles its own animation frame
   }, [engineRef]);
 
-  // Resize
   useEffect(() => {
     const updateSize = () => {
       if (containerRef.current) {
@@ -495,11 +415,9 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // Game loop
   useEffect(() => {
     const engine = engineRef.current;
     if (!engine || !canvasRef.current) return;
-
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -510,11 +428,9 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
     const loop = (time: number) => {
       const dt = lastTime === 0 ? 0.016 : Math.min((time - lastTime) / 1000, 0.1);
       lastTime = time;
-
       engine.update(dt);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       rendererRef.current.draw(ctx, engine.state, canvas.width, canvas.height);
-
       hudTimer += dt;
       if (hudTimer > 0.15) {
         hudTimer = 0;
@@ -526,16 +442,11 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
           heroes: state.heroes.map(h => ({ id: h.id, name: h.name, stamina: h.stamina, maxStamina: h.maxStamina, state: h.state, rarity: h.rarity, headType: h.headType })),
         });
         setUnclaimedBcoin(state.bcoinCollected);
-
-        // Collect heroes from broken cages
         const brokenDrops = state.heroDrops.filter(d => d.collected);
         if (brokenDrops.length > 0 && engineRef.current) {
           const droppedHeroes = engineRef.current.collectHeroDrops();
-          if (droppedHeroes.length > 0) {
-            onHeroDrop(droppedHeroes);
-          }
+          if (droppedHeroes.length > 0) onHeroDrop(droppedHeroes);
         }
-
         if (state.complete && !completionHandledRef.current) {
           completionHandledRef.current = true;
           setLastMapBcoin(state.bcoinCollected - bcoinBeforeMapRef.current);
@@ -544,12 +455,10 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
       }
       animRef.current = requestAnimationFrame(loop);
     };
-
     animRef.current = requestAnimationFrame(loop);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
-  }, [canvasSize, engineRef]);
+  }, [canvasSize, engineRef, onHeroDrop]);
 
-  // Auto-advance
   useEffect(() => {
     if (showMapComplete) {
       const timer = setTimeout(() => {
@@ -583,7 +492,6 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
     setHudData(prev => ({ ...prev, bcoin: 0 }));
   };
 
-  // Swap hero logic
   const getBenchHeroes = () => allHeroes.filter(h =>
     !engineRef.current?.state.heroes.some(ah => ah.id === h.id) &&
     h.currentStamina > h.maxStamina * 0.45
@@ -591,129 +499,93 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
 
   const handleSwap = (newHeroId: string) => {
     if (!engineRef.current || !swapHeroId) return;
-    // Save stamina of hero being removed
     const staminaMap = engineRef.current.getHeroStaminaMap();
     onStaminaUpdate(staminaMap);
-    // Do the swap in engine
     engineRef.current.removeHero(swapHeroId);
     const newHero = allHeroes.find(h => h.id === newHeroId);
-    if (newHero) {
-      engineRef.current.addHero(newHero);
-    }
+    if (newHero) engineRef.current.addHero(newHero);
     setSwapHeroId(null);
   };
 
   const handleGoHome = () => {
-    // Engine stays alive in engineRef — just leave
     onLeave();
   };
 
   return (
-    <div className="h-screen w-screen bg-gray-900 flex flex-col overflow-hidden">
-      {/* Top HUD - Mobile friendly */}
-      <div className="bg-gray-800 border-b border-gray-700/50 px-2 py-1.5 sm:px-3 sm:py-2 flex items-center justify-between shrink-0 z-10 gap-1">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <div className="flex items-center gap-2 bg-yellow-900/30 rounded-lg px-2 sm:px-3 py-1 border border-yellow-700/30">
-            <AnimatedCoin size={24} />
-            <div>
-              <div className="text-yellow-400 font-black text-sm sm:text-base leading-none">{hudData.bcoin}</div>
-              <div className="text-yellow-600 text-[8px] sm:text-[10px] font-bold">BCOIN</div>
-            </div>
-          </div>
+    <div className="h-screen flex flex-col bg-gray-950 text-white overflow-hidden">
+      {/* Top HUD */}
+      <div className="flex items-center justify-between px-3 py-2 bg-gray-900/90 border-b border-gray-800 shrink-0">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
-            <span className="text-xs sm:text-base">📦</span>
-            <div>
-              <div className="text-white font-bold text-[10px] sm:text-xs leading-none">{hudData.chests}/{hudData.totalChests}</div>
-            </div>
+            <BcoinIcon size={18} />
+            <span className="text-yellow-400 font-bold">{hudData.bcoin}</span>
           </div>
-          <div className="hidden md:flex items-center gap-1.5">
-            <div className="w-28">
-              <div className="h-2 bg-gray-700 rounded-full overflow-hidden shadow-inner">
-                <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(progress, 100)}%` }} />
-              </div>
-              <div className="text-gray-400 text-[8px] text-center mt-0.5">{Math.round(progress)}%</div>
-            </div>
+          <div className="text-xs text-gray-400">
+            📦 {hudData.chests}/{hudData.totalChests}
+          </div>
+          <div className="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${Math.min(100, progress)}%` }} />
           </div>
         </div>
-
-        <div className="flex items-center gap-1 bg-indigo-900/40 rounded-lg px-2 py-1 border border-indigo-700/30">
-          <span className="text-xs sm:text-sm">🗺️</span>
-          <span className="text-indigo-200 font-bold text-[10px] sm:text-xs">{hudData.mapNumber}</span>
+        <div className="text-sm font-bold">
+          🗺️ <span className="text-blue-400">{hudData.mapNumber}</span>
         </div>
-
-        <div className="flex items-center gap-1.5 sm:gap-3">
-          <div className="flex items-center gap-1">
-            <span className="text-xs sm:text-base">⏱️</span>
-            <span className="text-white font-bold text-[10px] sm:text-xs font-mono">{formatTime(hudData.time)}</span>
+        <div className="flex items-center gap-2">
+          <div className="text-xs text-gray-400">
+            ⏱️ {formatTime(hudData.time)}
           </div>
-
-          {/* Claim */}
-          <button onClick={handleClaim} disabled={unclaimedBcoin < 50}
-            className={`flex items-center gap-1 px-2 sm:px-3 py-2 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all min-h-[40px] ${
-              unclaimedBcoin >= 50
-                ? 'bg-gradient-to-r from-yellow-600 to-amber-500 text-white shadow-lg shadow-yellow-800/40 active:scale-95'
-                : 'bg-gray-700/50 text-gray-500 cursor-not-allowed border border-gray-600/30'}`}>
-            <span>💰</span>
-            <span className="hidden sm:inline">{unclaimedBcoin >= 50 ? `+${unclaimedBcoin}` : `${unclaimedBcoin}/50`}</span>
-            <span className="sm:hidden">{unclaimedBcoin >= 50 ? `+${unclaimedBcoin}` : `${unclaimedBcoin}`}</span>
-          </button>
-
-          {/* Home */}
-          <button onClick={handleGoHome}
-            className="flex items-center gap-1 px-2 sm:px-3 py-2 sm:py-1.5 bg-gray-700/80 text-white rounded-lg text-[10px] sm:text-xs font-bold transition-all active:scale-95 min-h-[40px]">
-            <span>🏠</span><span className="hidden sm:inline">Home</span>
-          </button>
+          {unclaimedBcoin >= 50 && (
+            <button onClick={handleClaim} className="text-xs px-2 py-1 bg-yellow-600 hover:bg-yellow-500 rounded-full font-bold animate-pulse">
+              💰 Coletar
+            </button>
+          )}
+          <button onClick={handleGoHome} className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded-full">🏠</button>
         </div>
       </div>
 
       {/* Main area */}
-      <div className="flex flex-1 overflow-hidden">
-        <div ref={containerRef} className="flex-1 relative bg-gray-950">
-          <canvas ref={canvasRef} width={canvasSize.w} height={canvasSize.h}
-            className="block" style={{ imageRendering: 'pixelated' }} />
-
-          {/* Map Complete */}
+      <div className="flex-1 flex min-h-0">
+        <div ref={containerRef} className="flex-1 relative">
+          <canvas ref={canvasRef} width={canvasSize.w} height={canvasSize.h} className="w-full h-full" />
           {showMapComplete && (
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20 pointer-events-none">
-              <div className="bg-gradient-to-b from-gray-800/95 to-gray-900/95 border-2 border-yellow-500/60 rounded-2xl px-10 py-6 text-center shadow-2xl shadow-yellow-900/30"
-                style={{ animation: 'bounce 0.6s ease-in-out infinite alternate' }}>
-                <div className="text-4xl mb-2">🏆</div>
-                <h2 className="text-2xl font-black text-yellow-400">Mapa {hudData.mapNumber} Completo!</h2>
-                <p className="text-yellow-300 font-bold text-xl mt-2">+{lastMapBcoin} 🪙 BCOIN</p>
-                <p className="text-gray-400 text-xs mt-2">Próximo mapa em 3s...</p>
+            <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+              <div className="text-center animate-bounce">
+                <div className="text-5xl">🏆</div>
+                <p className="text-yellow-400 font-black text-2xl mt-2">Mapa {hudData.mapNumber} Completo!</p>
+                <p className="text-yellow-300 text-lg">+{lastMapBcoin} 🪙 BCOIN</p>
+                <p className="text-gray-400 text-sm mt-2">Próximo mapa em 3s...</p>
               </div>
             </div>
           )}
         </div>
 
         {/* Side panel - Desktop */}
-        <div className="w-52 bg-gradient-to-b from-gray-800/95 to-gray-900/95 border-l border-gray-700/50 p-2 flex-col gap-1.5 overflow-y-auto shrink-0 hidden lg:flex">
-          <h3 className="text-white font-bold text-[10px] text-center py-1.5 border-b border-gray-700/50 mb-0.5 bg-gray-800/50 rounded-lg">
+        <div className="hidden lg:flex flex-col w-52 bg-gray-900/80 border-l border-gray-800 p-2 gap-1 overflow-y-auto">
+          <div className="text-sm font-bold text-center mb-1">
             ⚔️ Time ({hudData.heroes.length})
-          </h3>
-          {hudData.heroes.map((hero, i) => <HeroStatusMini key={i} hero={hero} onSwap={setSwapHeroId} />)}
-          <div className="mt-auto pt-2 border-t border-gray-700/50">
-            <div className="text-[8px] text-gray-500 text-center">Modo automático</div>
+          </div>
+          {hudData.heroes.map((hero) => (
+            <HeroStatusMini key={hero.id} hero={hero} onSwap={setSwapHeroId} />
+          ))}
+          <div className="mt-auto text-xs text-gray-600 text-center pt-2 border-t border-gray-800">
+            Modo automático
           </div>
         </div>
+      </div>
 
-        {/* Bottom bar - Mobile hero status */}
-        <div className="lg:hidden bg-gray-800/95 border-t border-gray-700/50 px-2 py-1.5 flex gap-1.5 overflow-x-auto shrink-0 scrollbar-hide">
-          {hudData.heroes.map((hero, i) => (
-            <div key={i} className="flex items-center gap-1 bg-gray-700/50 rounded-lg px-1.5 py-1 shrink-0">
-              <span className="text-sm">{HEAD_EMOJIS[hero.headType]}</span>
-              <div className="min-w-[36px] max-w-[48px]">
-                <div className="h-1.5 bg-gray-600 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full" style={{
-                    width: `${Math.max(0, (hero.stamina / hero.maxStamina) * 100)}%`,
-                    backgroundColor: hero.stamina / hero.maxStamina > 0.5 ? '#4CAF50' : hero.stamina / hero.maxStamina > 0.25 ? '#FF9800' : '#F44336',
-                  }} />
-                </div>
-              </div>
+      {/* Bottom bar - Mobile hero status */}
+      <div className="lg:hidden flex gap-1 px-2 py-1 bg-gray-900/90 border-t border-gray-800 overflow-x-auto scrollbar-hide shrink-0">
+        {hudData.heroes.map((hero) => (
+          <div key={hero.id} className="flex flex-col items-center shrink-0" onClick={() => hero.stamina / hero.maxStamina < 0.45 && setSwapHeroId(hero.id)}>
+            <span className="text-lg"><HeadIcon headType={hero.headType} size="text-lg" /></span>
+            <div className="w-8 h-1 bg-gray-700 rounded-full overflow-hidden">
+              <div className="h-full rounded-full" style={{
+                width: `${Math.max(0, (hero.stamina / hero.maxStamina) * 100)}%`,
+                backgroundColor: hero.stamina / hero.maxStamina > 0.5 ? '#4CAF50' : hero.stamina / hero.maxStamina > 0.25 ? '#FF9800' : '#F44336',
+              }} />
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
       {/* Swap Modal */}
@@ -737,49 +609,33 @@ function SwapHeroModal({ activeHero, benchHeroes, onSwap, onClose }: {
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[70vh] flex flex-col border border-gray-700 shadow-2xl" onClick={e => e.stopPropagation()}>
-        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-          <div>
-            <h3 className="text-white font-bold text-base">Trocar Herói</h3>
-            <p className="text-gray-400 text-xs mt-0.5">Substituir <span className="text-white font-semibold">{activeHero.name}</span> (Stamina: {Math.round(activeHero.stamina)}/{activeHero.maxStamina})</p>
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl leading-none p-1">✕</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={onClose}>
+      <div className="bg-gray-900 rounded-2xl p-4 max-w-sm w-full mx-4 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="text-center mb-3">
+          <h3 className="text-white font-bold text-lg">Trocar Herói</h3>
+          <p className="text-gray-400 text-sm">Substituir {activeHero.name} (Stamina: {Math.round(activeHero.stamina)}/{activeHero.maxStamina})</p>
         </div>
-        <div className="overflow-y-auto p-3 flex-1 space-y-2">
+        <div className="space-y-2">
           {benchHeroes.length === 0 && (
-            <p className="text-gray-500 text-center py-6 text-sm">Nenhum herói disponível com stamina acima de 45%</p>
+            <p className="text-center text-gray-500 text-sm py-4">Nenhum herói disponível com stamina acima de 45%</p>
           )}
           {benchHeroes.map(h => {
             const hc = RARITY_CONFIG[h.rarity];
             const staminaPct = h.currentStamina / h.maxStamina;
             return (
               <button key={h.id} onClick={() => onSwap(h.id)}
-                className="w-full flex items-center gap-3 bg-gray-700/50 hover:bg-gray-600/60 rounded-xl p-3 transition-all active:scale-[0.98] border border-gray-600/30 hover:border-gray-500/50">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0"
-                  style={{ background: `linear-gradient(135deg, ${hc.colors.primary}, ${hc.colors.secondary})` }}>
-                  {HEAD_EMOJIS[h.headType]}
+                className="w-full flex items-center gap-3 p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition border border-gray-700">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: hc.colors.primary }}>
+                  <HeadIcon headType={h.headType} size="text-lg" />
                 </div>
-                <div className="flex-1 text-left min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-bold text-sm truncate">{h.name}</span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                      style={{ color: hc.colors.helmet, backgroundColor: `${hc.colors.primary}33` }}>
-                      {hc.label}
-                    </span>
+                <div className="flex-1 text-left">
+                  <p className="text-white font-bold text-sm">{h.name}</p>
+                  <p className="text-xs" style={{ color: hc.colors.primary }}>{hc.label}</p>
+                  <div className="w-full h-1 bg-gray-700 rounded-full mt-1">
+                    <div className="h-full bg-green-500 rounded-full" style={{ width: `${staminaPct * 100}%` }} />
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="flex-1 h-2 bg-gray-600 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{
-                        width: `${staminaPct * 100}%`,
-                        backgroundColor: staminaPct > 0.5 ? '#4CAF50' : '#FF9800',
-                      }} />
-                    </div>
-                    <span className="text-xs text-gray-300 font-mono">{Math.round(h.currentStamina)}/{h.maxStamina}</span>
-                  </div>
-                  <div className="text-gray-400 text-[10px] mt-0.5">POW {h.power} • SPD {Math.round(h.speed * 10)} • RNG {h.bombRange}</div>
                 </div>
-                <span className="text-green-400 text-lg shrink-0">⇄</span>
+                <span className="text-green-400 text-sm font-bold">{Math.round(staminaPct * 100)}%</span>
               </button>
             );
           })}
@@ -792,34 +648,25 @@ function SwapHeroModal({ activeHero, benchHeroes, onSwap, onClose }: {
 // ─── Main App ───
 type Screen = 'collection' | 'teamSelect' | 'game';
 
-interface PlayerState {
-  bcoin: number;
-  heroes: HeroData[];
-}
-
 export default function App() {
   const [screen, setScreen] = useState<Screen>('collection');
-  const [player, setPlayer] = useState<PlayerState>(() => ({
+  const [player, setPlayer] = useState(() => ({
     bcoin: STARTING_BCOIN,
     heroes: generateStartingTeam(),
   }));
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [crateResult, setCrateResult] = useState<{ hero: HeroData; crateType: CrateType } | null>(null);
-
-  // Shared engine ref — survives screen changes!
   const engineRef = useRef<GameEngine | null>(null);
 
   const handleBuyCrate = useCallback((type: CrateType) => {
     const config = CRATES[type];
     if (player.bcoin < config.price) return;
     const hero = rollCrate(type);
-    // Deduct BCOIN but DON'T add hero yet - wait for reveal
     setPlayer(prev => ({ ...prev, bcoin: prev.bcoin - config.price }));
     setCrateResult({ hero, crateType: type });
   }, [player.bcoin]);
 
   const handleCloseCrate = useCallback(() => {
-    // NOW add the hero to collection after reveal
     if (crateResult) {
       setPlayer(prev => ({ ...prev, heroes: [...prev.heroes, crateResult.hero] }));
     }
@@ -827,14 +674,12 @@ export default function App() {
   }, [crateResult]);
 
   const handleStartHunt = useCallback(() => {
-    // Discard any saved game if starting fresh
     engineRef.current = null;
     setSelectedTeamIds(player.heroes.map(h => h.id).slice(0, MAX_TEAM_SIZE));
     setScreen('teamSelect');
   }, [player.heroes]);
 
   const handleResumeGame = useCallback(() => {
-    // Resume existing game — just go to game screen
     setScreen('game');
   }, []);
 
@@ -848,7 +693,6 @@ export default function App() {
 
   const handleStartGame = useCallback(() => {
     if (selectedTeamIds.length > 0) {
-      // New game — save stamina from old engine first, then discard
       if (engineRef.current) {
         const staminaMap = engineRef.current.getHeroStaminaMap();
         setPlayer(prev => ({
@@ -883,7 +727,6 @@ export default function App() {
   }, []);
 
   const handleLeaveGame = useCallback(() => {
-    // Save stamina from running game back to player heroes
     if (engineRef.current) {
       const staminaMap = engineRef.current.getHeroStaminaMap();
       setPlayer(prev => ({
@@ -899,7 +742,7 @@ export default function App() {
 
   const handleBackToCollection = useCallback(() => setScreen('collection'), []);
 
-  // Bench heroes recover stamina faster (10x normal rate, every second)
+  // Bench heroes recover stamina faster
   useEffect(() => {
     const interval = setInterval(() => {
       setPlayer(prev => {
@@ -908,7 +751,7 @@ export default function App() {
           ...prev,
           heroes: prev.heroes.map(h => {
             if (!activeIds.has(h.id) && h.currentStamina < h.maxStamina) {
-              return { ...h, currentStamina: Math.min(h.maxStamina, h.currentStamina + Math.ceil(h.maxStamina * 0.08) + 5) };
+              return { ...h, currentStamina: Math.min(h.maxStamina, h.currentStamina + Math.ceil(h.maxStamina * 0.015) + 1) };
             }
             return h;
           }),
@@ -923,20 +766,41 @@ export default function App() {
 
   if (screen === 'game' && (selectedTeam.length > 0 || engineRef.current)) {
     const teamToUse = engineRef.current ? engineRef.current.state.heroes.map(h => ({ ...h })) : selectedTeam;
-    return <GameScreen engineRef={engineRef} team={teamToUse} onLeave={handleLeaveGame} onClaim={handleClaimFromGame} onHeroDrop={handleHeroDrop} allHeroes={player.heroes} onStaminaUpdate={handleStaminaUpdate} />;
+    return (
+      <GameScreen
+        engineRef={engineRef}
+        team={teamToUse}
+        onLeave={handleLeaveGame}
+        onClaim={handleClaimFromGame}
+        onHeroDrop={handleHeroDrop}
+        allHeroes={player.heroes}
+        onStaminaUpdate={handleStaminaUpdate}
+      />
+    );
   }
 
   if (screen === 'teamSelect') {
     return (
-      <TeamSelectScreen heroes={player.heroes} selectedIds={selectedTeamIds}
-        onToggle={handleToggleHero} onStart={handleStartGame} onBack={handleBackToCollection} />
+      <TeamSelectScreen
+        heroes={player.heroes}
+        selectedIds={selectedTeamIds}
+        onToggle={handleToggleHero}
+        onStart={handleStartGame}
+        onBack={handleBackToCollection}
+      />
     );
   }
 
   return (
     <>
-      <CollectionScreen bcoin={player.bcoin} heroes={player.heroes} hasSavedGame={hasSavedGame}
-        onBuyCrate={handleBuyCrate} onStartHunt={handleStartHunt} onResumeGame={handleResumeGame} />
+      <CollectionScreen
+        bcoin={player.bcoin}
+        heroes={player.heroes}
+        hasSavedGame={hasSavedGame}
+        onBuyCrate={handleBuyCrate}
+        onStartHunt={handleStartHunt}
+        onResumeGame={handleResumeGame}
+      />
       {crateResult && <CrateOpenModal hero={crateResult.hero} crateType={crateResult.crateType} onClose={handleCloseCrate} />}
     </>
   );

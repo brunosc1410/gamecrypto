@@ -9,10 +9,10 @@ export const MAP_COLS = 31;
 export const MAP_ROWS = 19;
 export const BOMB_TIMER = 2.5;
 export const EXPLOSION_DURATION = 0.6;
-export const STAMINA_DRAIN = 3;
-export const STAMINA_RECOVERY = 2.5;
+export const STAMINA_DRAIN = 2;
+export const STAMINA_RECOVERY = 5;
 export const MAX_TEAM_SIZE = 8;
-export const STARTING_BCOIN = 1000;
+export const STARTING_BCOIN = 500;
 
 export const ALL_HEADS: HeadType[] = ['frog', 'ninja', 'cowboy', 'vampire', 'werewolf', 'wizard', 'dragon', 'fox', 'bear', 'skeleton', 'cat', 'panda'];
 
@@ -23,9 +23,9 @@ export const HEAD_LABELS: Record<HeadType, string> = {
 };
 
 export const HEAD_EMOJIS: Record<HeadType, string> = {
-  frog: '🐸', ninja: '🥷', cowboy: '🤠', vampire: '🧛',
-  werewolf: '🐺', wizard: '🧙', dragon: '🐉', fox: '🦊',
-  bear: '🐻', skeleton: '💀', cat: '🐱', panda: '🐼',
+  frog: '🐸', ninja: '🥷', cowboy: '🤠', vampire: '🧛', werewolf: '🐺',
+  wizard: '🧙', dragon: '🐉', fox: '🦊', bear: '🐻', skeleton: '💀',
+  cat: '🐱', panda: '🐼',
 };
 
 export interface ThemeConfig {
@@ -51,65 +51,29 @@ export const THEME_ORDER: MapTheme[] = ['stone', 'forest', 'fire', 'water', 'win
 
 export interface Point { x: number; y: number }
 export interface Cell { type: 'empty' | 'wall' | 'block' | 'chest'; hp: number; maxHp: number; bcoinValue: number }
-
-export interface HeroData {
-  id: string; name: string; rarity: Rarity;
-  power: number; maxStamina: number; speed: number; bombNum: number; bombRange: number;
-  abilities: string[]; currentStamina: number; headType: HeadType;
-}
-
-export interface RuntimeHero extends HeroData {
-  x: number; y: number; tileX: number; tileY: number;
-  direction: Direction; state: HeroState; stamina: number; activeBombs: number;
-  path: Point[]; pathIndex: number; animTimer: number; waitTimer: number;
-  movingToX: number; movingToY: number;
-  hasDoubleCoins: boolean; staminaRecoveryMult: number; fleeingFrom: Point | null;
-}
-
+export interface HeroData { id: string; name: string; rarity: Rarity; power: number; maxStamina: number; speed: number; bombNum: number; bombRange: number; abilities: string[]; currentStamina: number; headType: HeadType; }
+export interface RuntimeHero extends HeroData { x: number; y: number; tileX: number; tileY: number; direction: Direction; state: HeroState; stamina: number; activeBombs: number; path: Point[]; pathIndex: number; animTimer: number; waitTimer: number; movingToX: number; movingToY: number; hasDoubleCoins: boolean; staminaRecoveryMult: number; fleeingFrom: Point | null; }
 export interface Bomb { x: number; y: number; timer: number; range: number; power: number; heroId: string; animTimer: number }
 export interface Explosion { cells: Point[]; timer: number; maxTimer: number; power: number; heroId: string }
+export interface Particle { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; color: string; size: number; type: 'coin' | 'spark' | 'smoke' | 'damage' | 'text'; text?: string; }
+export interface HeroDrop { x: number; y: number; hero: HeroData; timer: number; maxTimer: number; hp: number; maxHp: number; collected: boolean; }
+export interface GameState { map: Cell[][]; heroes: RuntimeHero[]; bombs: Bomb[]; explosions: Explosion[]; particles: Particle[]; heroDrops: HeroDrop[]; bcoinCollected: number; totalChests: number; chestsOpened: number; totalBlocks: number; blocksDestroyed: number; gameTime: number; running: boolean; complete: boolean; mapNumber: number; theme: MapTheme; }
 
-export interface Particle {
-  x: number; y: number; vx: number; vy: number; life: number; maxLife: number;
-  color: string; size: number; type: 'coin' | 'spark' | 'smoke' | 'damage' | 'text';
-  text?: string;
-}
-
-export interface HeroDrop {
-  x: number; y: number; hero: HeroData; timer: number; maxTimer: number;
-  hp: number; maxHp: number; collected: boolean;
-}
-
-export interface GameState {
-  map: Cell[][]; heroes: RuntimeHero[]; bombs: Bomb[]; explosions: Explosion[];
-  particles: Particle[]; heroDrops: HeroDrop[];
-  bcoinCollected: number; totalChests: number; chestsOpened: number;
-  totalBlocks: number; blocksDestroyed: number; gameTime: number;
-  running: boolean; complete: boolean; mapNumber: number; theme: MapTheme;
-}
-
-export interface CrateConfig {
-  name: string; price: number; emoji: string; color: string; bgGradient: string;
-  probabilities: Record<Rarity, number>;
-}
+export interface CrateConfig { name: string; price: number; emoji: string; color: string; bgGradient: string; probabilities: Record<Rarity, number>; }
 
 export const CRATES: Record<CrateType, CrateConfig> = {
-  common: { name: 'Cápsula Comum', price: 10, emoji: '📦', color: '#8B7355', bgGradient: 'from-amber-800 to-amber-950',
-    probabilities: { common: 70, rare: 20, super_rare: 7, epic: 2.5, super_epic: 0.5, legendary: 0, super_legendary: 0 } },
-  rare: { name: 'Cápsula Rara', price: 30, emoji: '📦', color: '#4169E1', bgGradient: 'from-blue-700 to-blue-950',
-    probabilities: { common: 38, rare: 30, super_rare: 18, epic: 9, super_epic: 4, legendary: 0.8, super_legendary: 0.2 } },
-  epic: { name: 'Cápsula Épica', price: 80, emoji: '📦', color: '#EA580C', bgGradient: 'from-orange-700 to-orange-950',
-    probabilities: { common: 8, rare: 14, super_rare: 22, epic: 24, super_epic: 18, legendary: 10, super_legendary: 4 } },
-  legendary: { name: 'Cápsula Lendária', price: 200, emoji: '📦', color: '#D97706', bgGradient: 'from-yellow-700 to-yellow-950',
-    probabilities: { common: 2, rare: 5, super_rare: 10, epic: 18, super_epic: 25, legendary: 25, super_legendary: 15 } },
+  common: { name: 'Cápsula Comum', price: 10, emoji: '📦', color: '#8B7355', bgGradient: 'from-amber-800 to-amber-950', probabilities: { common: 70, rare: 20, super_rare: 7, epic: 2.5, super_epic: 0.5, legendary: 0, super_legendary: 0 } },
+  rare: { name: 'Cápsula Rara', price: 30, emoji: '📦', color: '#4169E1', bgGradient: 'from-blue-700 to-blue-950', probabilities: { common: 38, rare: 30, super_rare: 18, epic: 9, super_epic: 4, legendary: 0.8, super_legendary: 0.2 } },
+  epic: { name: 'Cápsula Épica', price: 80, emoji: '📦', color: '#EA580C', bgGradient: 'from-orange-700 to-orange-950', probabilities: { common: 8, rare: 14, super_rare: 22, epic: 24, super_epic: 18, legendary: 10, super_legendary: 4 } },
+  legendary: { name: 'Cápsula Lendária', price: 200, emoji: '📦', color: '#D97706', bgGradient: 'from-yellow-700 to-yellow-950', probabilities: { common: 2, rare: 5, super_rare: 10, epic: 18, super_epic: 25, legendary: 25, super_legendary: 15 } },
 };
 
-export const BCOIN_BY_RARITY: Record<Rarity, [number, number]> = {
-  common: [0, 1], rare: [0, 1], super_rare: [0, 2], epic: [0, 2], super_epic: [0, 2], legendary: [0, 3], super_legendary: [0, 3],
+export const BCOIN_BY_RARITY: Record<Rarity, number[]> = {
+  common: [0, 1], rare: [0, 1], super_rare: [0, 2], epic: [0, 2],
+  super_epic: [0, 2], legendary: [0, 3], super_legendary: [0, 3],
 };
 
-// Hero drop chances from blocks
-export const BLOCK_HERO_DROP_RATE = 0.006; // 0.6% chance per block
+export const BLOCK_HERO_DROP_RATE = 0.006;
 export const HERO_DROP_RARITY_WEIGHTS: Record<Rarity, number> = {
   common: 500, rare: 250, super_rare: 130, epic: 65, super_epic: 30, legendary: 18, super_legendary: 7,
 };
@@ -136,11 +100,14 @@ const HERO_NAMES: Record<Rarity, string[]> = {
 
 const ALL_ABILITIES = ['Recuperação de Stamina', 'Poder Extra', 'Velocidade Extra', 'Bomba Extra', 'Alcance Estendido', 'Moedas Duplas'];
 
-function randomInt(min: number, max: number): number { return Math.floor(Math.random() * (max - min + 1)) + min; }
-function randomChoice<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+function randomChoice<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
 let heroIdCounter = 0;
-
 export function generateHero(rarity: Rarity): HeroData {
   heroIdCounter++;
   const id = `hero_${Date.now()}_${heroIdCounter}`;
@@ -148,18 +115,21 @@ export function generateHero(rarity: Rarity): HeroData {
   const headType = randomChoice(ALL_HEADS);
   let power: number, maxStamina: number, speed: number, bombNum: number, bombRange: number;
   switch (rarity) {
-    case 'common': power = randomInt(1, 2); maxStamina = randomInt(100, 140); speed = 1.8 + Math.random() * 0.4; bombNum = 1; bombRange = randomInt(1, 2); break;
-    case 'rare': power = randomInt(2, 4); maxStamina = randomInt(140, 180); speed = 2.2 + Math.random() * 0.4; bombNum = randomInt(1, 2); bombRange = randomInt(2, 3); break;
-    case 'super_rare': power = randomInt(4, 6); maxStamina = randomInt(180, 230); speed = 2.6 + Math.random() * 0.4; bombNum = 2; bombRange = randomInt(3, 4); break;
-    case 'epic': power = randomInt(6, 8); maxStamina = randomInt(230, 290); speed = 3.0 + Math.random() * 0.5; bombNum = randomInt(2, 3); bombRange = randomInt(4, 5); break;
-    case 'super_epic': power = randomInt(8, 11); maxStamina = randomInt(290, 360); speed = 3.5 + Math.random() * 0.5; bombNum = 3; bombRange = randomInt(5, 7); break;
-    case 'legendary': power = randomInt(11, 14); maxStamina = randomInt(360, 430); speed = 4.0 + Math.random() * 0.5; bombNum = randomInt(3, 4); bombRange = randomInt(6, 8); break;
-    case 'super_legendary': power = randomInt(14, 18); maxStamina = randomInt(430, 520); speed = 4.5 + Math.random() * 0.5; bombNum = 4; bombRange = randomInt(7, 9); break;
+    case 'common': power = 1; maxStamina = randomInt(70, 95); speed = 1.5 + Math.random() * 0.3; bombNum = 1; bombRange = 1; break;
+    case 'rare': power = randomInt(1, 2); maxStamina = randomInt(95, 125); speed = 1.7 + Math.random() * 0.3; bombNum = 1; bombRange = randomInt(1, 2); break;
+    case 'super_rare': power = randomInt(2, 4); maxStamina = randomInt(125, 160); speed = 1.9 + Math.random() * 0.3; bombNum = randomInt(1, 2); bombRange = 2; break;
+    case 'epic': power = randomInt(3, 5); maxStamina = randomInt(160, 200); speed = 2.1 + Math.random() * 0.3; bombNum = 2; bombRange = randomInt(2, 3); break;
+    case 'super_epic': power = randomInt(5, 7); maxStamina = randomInt(200, 250); speed = 2.3 + Math.random() * 0.3; bombNum = 2; bombRange = randomInt(3, 4); break;
+    case 'legendary': power = randomInt(7, 10); maxStamina = randomInt(250, 310); speed = 2.5 + Math.random() * 0.3; bombNum = randomInt(2, 3); bombRange = randomInt(4, 5); break;
+    case 'super_legendary': power = randomInt(10, 13); maxStamina = randomInt(310, 380); speed = 2.7 + Math.random() * 0.3; bombNum = 3; bombRange = randomInt(5, 6); break;
   }
   const abilityCount = rarity === 'common' ? 0 : rarity === 'rare' ? randomInt(0, 1) : rarity === 'super_rare' ? 1 : rarity === 'epic' ? randomInt(1, 2) : rarity === 'super_epic' ? randomInt(2, 3) : rarity === 'legendary' ? randomInt(2, 3) : randomInt(3, 4);
   const abilities: string[] = [];
   const available = [...ALL_ABILITIES];
-  for (let i = 0; i < abilityCount && available.length > 0; i++) { const idx = randomInt(0, available.length - 1); abilities.push(available.splice(idx, 1)[0]); }
+  for (let i = 0; i < abilityCount && available.length > 0; i++) {
+    const idx = randomInt(0, available.length - 1);
+    abilities.push(available.splice(idx, 1)[0]);
+  }
   for (const ability of abilities) {
     switch (ability) {
       case 'Poder Extra': power = Math.ceil(power * 1.3); break;
@@ -177,7 +147,10 @@ export function rollCrate(crateType: CrateType): HeroData {
   const roll = Math.random() * 100;
   let cumulative = 0;
   const rarities: Rarity[] = ['common', 'rare', 'super_rare', 'epic', 'super_epic', 'legendary', 'super_legendary'];
-  for (const rarity of rarities) { cumulative += config.probabilities[rarity]; if (roll < cumulative) return generateHero(rarity); }
+  for (const rarity of rarities) {
+    cumulative += config.probabilities[rarity];
+    if (roll < cumulative) return generateHero(rarity);
+  }
   return generateHero('common');
 }
 
@@ -186,7 +159,10 @@ export function rollBlockHeroDrop(): HeroData | null {
   const rarities: Rarity[] = ['common', 'rare', 'super_rare', 'epic', 'super_epic', 'legendary', 'super_legendary'];
   const totalWeight = rarities.reduce((s, r) => s + HERO_DROP_RARITY_WEIGHTS[r], 0);
   let roll = Math.random() * totalWeight;
-  for (const r of rarities) { roll -= HERO_DROP_RARITY_WEIGHTS[r]; if (roll <= 0) return generateHero(r); }
+  for (const r of rarities) {
+    roll -= HERO_DROP_RARITY_WEIGHTS[r];
+    if (roll <= 0) return generateHero(r);
+  }
   return generateHero('common');
 }
 

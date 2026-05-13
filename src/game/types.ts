@@ -10,7 +10,7 @@ export const MAP_ROWS = 19;
 export const BOMB_TIMER = 2.5;
 export const EXPLOSION_DURATION = 0.6;
 export const STAMINA_DRAIN = 2;
-export const STAMINA_RECOVERY = 5;
+export const STAMINA_RECOVERY = 1.2;
 export const MAX_TEAM_SIZE = 8;
 export const STARTING_BCOIN = 2000;
 

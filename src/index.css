@@ -37,18 +37,18 @@ html, body {
   50% { transform: scale(1.15); }
 }
 
-/* Flying coin to chest animation */
+/* Flying coin to chest animation - starts at center, flies UP to top-left chest icon */
 @keyframes flyCoinToChest {
   0% {
-    transform: translate(-50%, -50%) scale(1.6);
+    transform: translate(-50%, -50%) scale(1);
     opacity: 1;
   }
-  15% {
-    transform: translate(-60%, -120%) scale(1.4);
+  8% {
+    transform: translate(calc(-50% - 5vw), calc(-50% - 30px)) scale(1.4);
     opacity: 1;
   }
   100% {
-    transform: translate(calc(-50% - 44vw), calc(-50% - 48vh)) scale(0.2);
+    transform: translate(calc(-50% - 44vw), calc(-50% - 44vh)) scale(0.35);
     opacity: 0;
   }
 }
@@ -56,6 +56,12 @@ html, body {
 /* Chest pulse when coin arrives */
 @keyframes chestPulse {
   0% { transform: scale(1); }
-  50% { transform: scale(1.25); }
+  30% { transform: scale(1.35); }
   100% { transform: scale(1); }
+}
+
+/* Coin glow pulse for the flying coin */
+@keyframes coinGlow {
+  0%, 100% { box-shadow: 0 0 8px 2px rgba(255, 215, 0, 0.6); }
+  50% { box-shadow: 0 0 16px 6px rgba(255, 215, 0, 0.9); }
 }

@@ -19,21 +19,84 @@ function BcoinIcon({ size = 20 }: { size?: number }) {
   );
 }
 
-// ─── HUD Chest Icon (target for flying coins) ───
-function HudChestIcon({ size = 22, pulse = false }: { size?: number; pulse?: boolean }) {
+// ─── HUD Chest Icon (RPG Fantasy style - dynamic treasure chest) ───
+function HudChestIcon({ size = 28, pulse = false }: { size?: number; pulse?: boolean }) {
   return (
-    <svg viewBox="0 0 28 28" width={size} height={size} className={pulse ? 'animate-[chestPulse_0.4s_ease-in-out]' : ''}>
+    <svg viewBox="0 0 40 36" width={size} height={size * 0.9} className={pulse ? 'animate-[chestPulse_0.4s_ease-in-out]' : ''}>
+      {/* Golden glow behind chest */}
+      <defs>
+        <radialGradient id="chestGlow" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stopColor="#FFD700" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#FFD700" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="woodGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#A0722B" />
+          <stop offset="50%" stopColor="#8B5A2B" />
+          <stop offset="100%" stopColor="#6B4513" />
+        </linearGradient>
+        <linearGradient id="lidGrad" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor="#A0722B" />
+          <stop offset="100%" stopColor="#C49040" />
+        </linearGradient>
+        <linearGradient id="goldTrim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFE44D" />
+          <stop offset="50%" stopColor="#DAA520" />
+          <stop offset="100%" stopColor="#B8860B" />
+        </linearGradient>
+      </defs>
+
+      {/* Background glow */}
+      <circle cx="20" cy="18" r="18" fill="url(#chestGlow)" />
+
+      {/* Shadow */}
+      <ellipse cx="20" cy="33" rx="14" ry="2.5" fill="rgba(0,0,0,0.35)" />
+
       {/* Chest body */}
-      <rect x="3" y="13" width="22" height="12" rx="2" fill="#8B5A2B" stroke="#5a3518" strokeWidth="1" />
-      {/* Chest lid */}
-      <path d="M3 13 Q3 7 14 7 Q25 7 25 13" fill="#A0722B" stroke="#5a3518" strokeWidth="1" />
-      {/* Gold trim */}
-      <line x1="3" y1="13" x2="25" y2="13" stroke="#DAA520" strokeWidth="1.5" />
-      {/* Lock */}
-      <rect x="11" y="16" width="6" height="5" rx="1" fill="#DAA520" stroke="#B8860B" strokeWidth="0.5" />
-      <circle cx="14" cy="17.5" r="1" fill="#333" />
-      {/* Highlight */}
-      <path d="M6 9 Q6 8 8 8" stroke="rgba(255,255,255,0.3)" strokeWidth="1" fill="none" />
+      <rect x="4" y="17" width="32" height="16" rx="2" fill="url(#woodGrad)" stroke="#4a2a08" strokeWidth="1" />
+
+      {/* Wood grain lines */}
+      <line x1="10" y1="19" x2="10" y2="32" stroke="rgba(0,0,0,0.1)" strokeWidth="0.5" />
+      <line x1="20" y1="19" x2="20" y2="32" stroke="rgba(0,0,0,0.08)" strokeWidth="0.5" />
+      <line x1="30" y1="19" x2="30" y2="32" stroke="rgba(0,0,0,0.1)" strokeWidth="0.5" />
+
+      {/* Metal bands horizontal */}
+      <rect x="3" y="17" width="34" height="2.5" rx="0.5" fill="url(#goldTrim)" />
+      <rect x="3" y="30.5" width="34" height="2.5" rx="0.5" fill="url(#goldTrim)" />
+      {/* Metal bands vertical */}
+      <rect x="4" y="16" width="2.5" height="18" rx="0.5" fill="url(#goldTrim)" />
+      <rect x="33.5" y="16" width="2.5" height="18" rx="0.5" fill="url(#goldTrim)" />
+
+      {/* Chest lid - rounded dome shape */}
+      <path d="M4 17 Q4 5 20 3 Q36 5 36 17 Z" fill="url(#lidGrad)" stroke="#4a2a08" strokeWidth="1" />
+
+      {/* Lid highlight arc */}
+      <path d="M10 14 Q10 8 20 7 Q30 8 30 14" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+
+      {/* Gold trim at lid-body seam */}
+      <rect x="3" y="15.5" width="34" height="3" rx="1" fill="url(#goldTrim)" />
+
+      {/* Lock plate - center */}
+      <rect x="15" y="21" width="10" height="8" rx="1.5" fill="url(#goldTrim)" stroke="#8B6914" strokeWidth="0.5" />
+      {/* Keyhole */}
+      <circle cx="20" cy="23.5" r="2" fill="#333" />
+      <rect x="19.2" y="24" width="1.6" height="3" rx="0.5" fill="#333" />
+      {/* Lock shine */}
+      <circle cx="18.5" cy="22" r="0.8" fill="rgba(255,255,255,0.3)" />
+
+      {/* Corner rivets */}
+      <circle cx="7.5" cy="20" r="1.2" fill="#FFE44D" stroke="#B8860B" strokeWidth="0.3" />
+      <circle cx="32.5" cy="20" r="1.2" fill="#FFE44D" stroke="#B8860B" strokeWidth="0.3" />
+      <circle cx="7.5" cy="30" r="1.2" fill="#FFE44D" stroke="#B8860B" strokeWidth="0.3" />
+      <circle cx="32.5" cy="30" r="1.2" fill="#FFE44D" stroke="#B8860B" strokeWidth="0.3" />
+
+      {/* Sparkle effects */}
+      <circle cx="10" cy="8" r="1" fill="rgba(255,255,200,0.7)" />
+      <circle cx="30" cy="10" r="0.8" fill="rgba(255,255,200,0.5)" />
+      <circle cx="20" cy="5" r="0.6" fill="rgba(255,255,200,0.6)" />
+
+      {/* Gold coins peeking from lid */}
+      <ellipse cx="16" cy="10" rx="3" ry="2" fill="#FFD700" stroke="#B8860B" strokeWidth="0.5" />
+      <ellipse cx="24" cy="9" rx="2.5" ry="1.8" fill="#FFE44D" stroke="#B8860B" strokeWidth="0.5" />
     </svg>
   );
 }
@@ -674,13 +737,13 @@ function GameScreen({ engineRef, team, onLeave, onClaim, onHeroDrop, allHeroes, 
         <div key={coin.id} className="fixed pointer-events-none z-[100]"
           style={{
             left: '50%',
-            top: '55%',
-            animation: 'flyCoinToChest 1.1s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+            top: '50%',
+            animation: 'flyCoinToChest 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
           }}>
-          <div className="flex items-center gap-1 bg-yellow-900/70 rounded-full px-2.5 py-1 border border-yellow-400/60 shadow-lg shadow-yellow-500/30"
-            style={{ transform: 'translate(-50%, -50%)' }}>
-            <span className="text-yellow-300 text-sm">🪙</span>
-            <span className="text-yellow-300 text-sm font-black">+{coin.amount}</span>
+          <div className="flex items-center gap-2 bg-gradient-to-b from-yellow-700 to-yellow-900 rounded-full px-4 py-2 border-2 border-yellow-400 shadow-xl shadow-yellow-400/50"
+            style={{ animation: 'coinGlow 0.3s ease-in-out infinite' }}>
+            <BcoinIcon size={22} />
+            <span className="text-yellow-200 text-base font-black">+{coin.amount}</span>
           </div>
         </div>
       ))}
@@ -848,7 +911,7 @@ export default function App() {
           ...prev,
           heroes: prev.heroes.map(h => {
             if (!activeIds.has(h.id) && h.currentStamina < h.maxStamina) {
-              return { ...h, currentStamina: Math.min(h.maxStamina, h.currentStamina + Math.ceil(h.maxStamina * 0.015) + 1) };
+              return { ...h, currentStamina: Math.min(h.maxStamina, h.currentStamina + Math.ceil(h.maxStamina * 0.035) + 2) };
             }
             return h;
           }),

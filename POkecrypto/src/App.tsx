@@ -7,6 +7,7 @@ import Wallet from './components/Wallet';
 import ExploreMap from './components/ExploreMap';
 import EncounterScreen from './components/EncounterScreen';
 import Codex from './components/Codex';
+import Profile from './components/Profile';
 
 export default function App() {
   const screen = useGameStore((s) => s.screen);
@@ -48,6 +49,7 @@ export default function App() {
         {screen === 'explore' && <ExploreMap />}
         {screen === 'encounter' && <EncounterScreen />}
         {screen === 'codex' && <Codex />}
+        {screen === 'profile' && <Profile />}
       </div>
     </div>
   );

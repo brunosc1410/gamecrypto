@@ -93,4 +93,7 @@ export interface EncounterState {
   attempts: number;
 }
 
-export type GameScreen = 'menu' | 'collection' | 'battle' | 'shop' | 'wallet' | 'explore' | 'encounter' | 'codex';
+export type AvatarGender = 'male' | 'female';
+export type AvatarClass = 'archer' | 'warrior' | 'mage' | 'dwarf' | 'elf' | 'zombie' | 'vampire' | 'viking';
+
+export type GameScreen = 'menu' | 'collection' | 'battle' | 'shop' | 'wallet' | 'explore' | 'encounter' | 'codex' | 'profile';

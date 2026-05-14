@@ -33,12 +33,20 @@ export default function EncounterScreen() {
   const maxAttempts = 3;
   const attemptsLeft = maxAttempts - encounter.attempts;
 
-  // Appear animation on mount
+  // Appear animation on mount + auto-capture check
   useEffect(() => {
     mounted.current = true;
     const t = setTimeout(() => { if (mounted.current) setPetVisible(true); }, 100);
     const t2 = setTimeout(() => { if (mounted.current) setMsg(`${pet?.name} selvagem apareceu!`); }, 600);
-    return () => { mounted.current = false; clearTimeout(t); clearTimeout(t2); };
+
+    // Auto-capture mode: auto throw after appear
+    const mode = useGameStore.getState().encounterMode;
+    let t3: ReturnType<typeof setTimeout> | undefined;
+    if (mode === 'auto-capture' && cryptoBalls > 0) {
+      t3 = setTimeout(() => { if (mounted.current) doThrow(); }, 1200);
+    }
+
+    return () => { mounted.current = false; clearTimeout(t); clearTimeout(t2); if (t3) clearTimeout(t3); };
   }, []);
 
   // The entire throw sequence as one async function - no effects, no callbacks
@@ -147,6 +155,20 @@ export default function EncounterScreen() {
     useGameStore.getState().setEncounterPhase('caught');
     setBusy(false);
   };
+
+  // Auto-capture: auto-retry on escape, auto-finish on caught/fled
+  useEffect(() => {
+    const mode = useGameStore.getState().encounterMode;
+    if (mode !== 'auto-capture' || busy) return;
+
+    let t: ReturnType<typeof setTimeout> | undefined;
+    if (result === 'escaped' && attemptsLeft > 0 && cryptoBalls > 0) {
+      t = setTimeout(() => { if (mounted.current) doThrow(); }, 800);
+    } else if (result === 'caught' || result === 'fled' || (result === 'escaped' && attemptsLeft <= 0)) {
+      t = setTimeout(() => { if (mounted.current) finishEncounter(); }, 1500);
+    }
+    return () => { if (t) clearTimeout(t); };
+  }, [result, busy]);
 
   if (!pet) return null;
 

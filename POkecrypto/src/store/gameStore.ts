@@ -1,13 +1,24 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Pet, BattleLog, BattleState, ExploreState, EncounterState, GameScreen, MapZone } from '../types/game';
+import { Pet, BattleLog, BattleState, ExploreState, EncounterState, GameScreen, MapZone, AvatarGender, AvatarClass } from '../types/game';
 import { STARTER_PETS, ELEMENT_ADVANTAGE } from '../data/pets';
+
+export interface Inventory {
+  potionHp: number;
+  potionAtk: number;
+  potionDef: number;
+  potionSpd: number;
+  megaPack: number;
+}
 
 interface GameState {
   screen: GameScreen;
   playerName: string;
+  playerGender: AvatarGender;
+  playerClass: AvatarClass;
   coins: number;
   gems: number;
+  inventory: Inventory;
   pets: Pet[];
   selectedPetId: string | null;
   battle: BattleState;
@@ -16,12 +27,17 @@ interface GameState {
   totalBattles: number;
   totalCaptures: number;
   cryptoBalls: number;
+  exploreSpeed: number; // 1, 2, or 3
+  encounterMode: 'manual' | 'auto-battle' | 'auto-capture' | 'auto-flee';
+  isVip: boolean;
   seenPets: string[];   // names of pets seen in encounters
   walletConnected: boolean;
   walletAddress: string | null;
 
   setScreen: (screen: GameScreen) => void;
   setPlayerName: (name: string) => void;
+  setPlayerGender: (g: AvatarGender) => void;
+  setPlayerClass: (c: AvatarClass) => void;
   addStarterPets: () => void;
   selectPet: (id: string) => void;
   updatePetColors: (petId: string, colors: { primary?: string; secondary?: string; accent?: string }) => void;
@@ -87,7 +103,10 @@ export const useGameStore = create<GameState>()(
     (set, get) => ({
       screen: 'menu',
       playerName: 'Treinador',
+      playerGender: 'male',
+      playerClass: 'warrior',
       coins: 500,
+      inventory: { potionHp: 0, potionAtk: 0, potionDef: 0, potionSpd: 0, megaPack: 0 },
       gems: 10,
       pets: [],
       selectedPetId: null,
@@ -97,12 +116,17 @@ export const useGameStore = create<GameState>()(
       totalBattles: 0,
       totalCaptures: 0,
       cryptoBalls: 20,
+      exploreSpeed: 1,
+      encounterMode: 'manual' as const,
+      isVip: false,
       seenPets: [],
       walletConnected: false,
       walletAddress: null,
 
       setScreen: (screen) => set({ screen }),
       setPlayerName: (name) => set({ playerName: name }),
+      setPlayerGender: (g) => set({ playerGender: g }),
+      setPlayerClass: (c) => set({ playerClass: c }),
 
       addStarterPets: () => {
         const state = get();
@@ -359,6 +383,14 @@ export const useGameStore = create<GameState>()(
             }
             return { ...p, stats: ns, wins: p.wins + 1 };
           }
+          // XP parcial mesmo ao perder
+          const expLoss = 10 + (battle.enemyPet?.stats.level ?? 1) * 3;
+          ns.exp += expLoss;
+          if (ns.exp >= ns.expToNext) {
+            ns.exp -= ns.expToNext; ns.level += 1;
+            ns.expToNext = Math.floor(ns.expToNext * 1.3);
+            ns.maxHp += 8; ns.hp = ns.maxHp; ns.attack += 3; ns.defense += 2; ns.speed += 2;
+          }
           return { ...p, stats: ns, losses: p.losses + 1 };
         });
         if (battle.winner === 'player') { coins += 100 + (battle.enemyPet?.stats.level ?? 1) * 20; gems += Math.random() < 0.3 ? 1 : 0; } else { coins += 20; }
@@ -411,10 +443,10 @@ export const useGameStore = create<GameState>()(
     {
       name: 'cryptopets-arena-save',
       partialize: (state) => ({
-        playerName: state.playerName, coins: state.coins, gems: state.gems,
+        playerName: state.playerName, playerGender: state.playerGender, playerClass: state.playerClass, coins: state.coins, gems: state.gems,
         pets: state.pets, selectedPetId: state.selectedPetId,
         totalBattles: state.totalBattles, totalCaptures: state.totalCaptures,
-        cryptoBalls: state.cryptoBalls, seenPets: state.seenPets,
+        cryptoBalls: state.cryptoBalls, exploreSpeed: state.exploreSpeed, encounterMode: state.encounterMode, isVip: state.isVip, inventory: state.inventory, seenPets: state.seenPets,
         walletConnected: state.walletConnected, walletAddress: state.walletAddress,
       }),
     }

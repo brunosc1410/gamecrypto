@@ -68,8 +68,8 @@ export default function Codex() {
 
       {/* Grid — hidden scrollbar, drag to scroll */}
       <div className="cdx-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' } as React.CSSProperties}>
-        <div style={{ padding: '8px 24px 24px 24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+        <div style={{ padding: '12px 24px 28px 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
             {filtered.map((e, i) => {
               const seen = seenSet.has(e.name);
               const owned = ownedNames.has(e.name);
@@ -78,25 +78,25 @@ export default function Codex() {
 
               return (
                 <button key={`${e.name}-${i}`} onClick={() => setSel(e.name)} style={{
-                  position: 'relative', borderRadius: 10, padding: 6,
-                  border: isSel ? '2px solid rgba(248,113,113,0.5)' : owned ? '2px solid rgba(34,197,94,0.2)' : '2px solid rgba(255,255,255,0.04)',
-                  background: isSel ? 'rgba(127,29,29,0.12)' : owned ? 'rgba(20,83,45,0.08)' : 'rgba(255,255,255,0.015)',
-                  cursor: 'pointer', textAlign: 'left' as const, display: 'flex', flexDirection: 'column' as const, alignItems: 'center',
+                  position: 'relative', borderRadius: 14, padding: '10px 8px 8px 8px',
+                  border: isSel ? '2px solid rgba(248,113,113,0.5)' : owned ? '2px solid rgba(34,197,94,0.2)' : '2px solid rgba(255,255,255,0.06)',
+                  background: isSel ? 'rgba(127,29,29,0.15)' : owned ? 'rgba(20,83,45,0.1)' : 'rgba(255,255,255,0.02)',
+                  cursor: 'pointer', display: 'flex', flexDirection: 'column' as const, alignItems: 'center',
                 }} className="active:scale-95 transition-transform">
-                  <span style={{ position: 'absolute', top: 3, left: 5, fontSize: 6, fontWeight: 700, color: '#4b5563' }}>#{String(idx).padStart(3, '0')}</span>
-                  {owned && <span style={{ position: 'absolute', top: 2, right: 4, color: '#22c55e', fontSize: 9, fontWeight: 700 }}>✓</span>}
+                  <span style={{ position: 'absolute', top: 5, left: 7, fontSize: 8, fontWeight: 700, color: '#6b7280' }}>#{String(idx).padStart(3, '0')}</span>
+                  {owned && <span style={{ position: 'absolute', top: 4, right: 6, color: '#22c55e', fontSize: 12, fontWeight: 700 }}>✓</span>}
 
-                  <div style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
+                  <div style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
                     {seen || owned ? (
-                      <div style={{ width: 32, height: 32, filter: !owned ? 'grayscale(0.7) brightness(0.5)' : undefined }}>
-                        <PetSprite pet={{ ...e, id: 'cx' } as Pet} size={32} animate={owned} showParticles={false} />
+                      <div style={{ width: 48, height: 48, filter: !owned ? 'grayscale(0.7) brightness(0.5)' : undefined }}>
+                        <PetSprite pet={{ ...e, id: 'cx' } as Pet} size={48} animate={owned} showParticles={false} />
                       </div>
                     ) : (
-                      <span style={{ fontSize: 14, opacity: 0.1 }}>❓</span>
+                      <span style={{ fontSize: 22, opacity: 0.12 }}>❓</span>
                     )}
                   </div>
 
-                  <p style={{ textAlign: 'center', fontSize: 6, fontWeight: 700, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', color: owned ? 'white' : seen ? '#9ca3af' : '#374151' }}>
+                  <p style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, marginTop: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', color: owned ? 'white' : seen ? '#9ca3af' : '#4b5563' }}>
                     {seen || owned ? e.name : '???'}
                   </p>
                 </button>

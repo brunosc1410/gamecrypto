@@ -16,6 +16,17 @@ export default function Battle() {
     }
   }, [battle.isActive, battle.isAutoPlaying, battle.winner, battle.battleSpeed, processBattleTurn]);
 
+  // Auto-battle mode: auto-collect reward when battle ends
+  useEffect(() => {
+    if (battle.winner) {
+      const mode = useGameStore.getState().encounterMode;
+      if (mode === 'auto-battle') {
+        const t = setTimeout(() => endBattle(), 1500);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [battle.winner, endBattle]);
+
   useEffect(() => {
     if (battle.currentAnimation.type !== 'idle' && battle.currentAnimation.type !== 'none') {
       animTimer.current = setTimeout(clearBattleAnimation, battle.currentAnimation.duration);

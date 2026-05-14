@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { ZONES, generateEnemyForZone } from '../data/pets';
-import PixelAvatar from './PixelAvatar';
+import PlayerAvatar from './PlayerAvatar';
+import InventoryPanel from './InventoryPanel';
 
 type Dir = 'up' | 'down' | 'left' | 'right';
 
@@ -47,12 +48,20 @@ export default function ExploreMap() {
   const startEncounter = useGameStore((s) => s.startEncounter);
   const setScreen = useGameStore((s) => s.setScreen);
   const stopExploring = useGameStore((s) => s.stopExploring);
+  const playerGender = useGameStore((s) => s.playerGender);
+  const playerClass = useGameStore((s) => s.playerClass);
+
+  const exploreSpeed = useGameStore((s) => s.exploreSpeed);
+  const coins = useGameStore((s) => s.coins);
+  const addCoins = useGameStore((s) => s.addCoins);
+  const isVip = useGameStore((s) => s.isVip);
 
   const [paused, setPaused] = useState(false);
   const [walkFrame, setWalkFrame] = useState(0);
-  const [speed, setSpeed] = useState(1);
   const [flashVisible, setFlashVisible] = useState(false);
   const [onGrass, setOnGrass] = useState(false);
+  const [show3xConfirm, setShow3xConfirm] = useState(false);
+  const speed = exploreSpeed;
   const dirRef = useRef<Dir>('right');
   const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const walkRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -93,7 +102,8 @@ export default function ExploreMap() {
   // Walk animation
   useEffect(() => {
     if (!paused && !explore.encounterPending) {
-      walkRef.current = setInterval(() => setWalkFrame(f => (f + 1) % 4), speed === 2 ? 140 : 200);
+      const animMs = speed === 3 ? 80 : speed === 2 ? 140 : 200;
+      walkRef.current = setInterval(() => setWalkFrame(f => (f + 1) % 4), animMs);
       return () => { if (walkRef.current) clearInterval(walkRef.current); };
     }
   }, [paused, explore.encounterPending, speed]);
@@ -114,9 +124,8 @@ export default function ExploreMap() {
       if (chgRef.current) clearTimeout(chgRef.current);
       return;
     }
-    // Slower speeds
-    const ms = speed === 2 ? 180 : 300;
-    const ss = speed === 2 ? 1.8 : 1.2;
+    const ms = speed === 3 ? 100 : speed === 2 ? 180 : 300;
+    const ss = speed === 3 ? 2.5 : speed === 2 ? 1.8 : 1.2;
 
     autoRef.current = setInterval(() => {
       const st = useGameStore.getState();
@@ -163,15 +172,38 @@ export default function ExploreMap() {
     };
   }, [paused, explore.encounterPending, speed, moveAvatar, schedDir, zone.encounterRate, triggerEncounter]);
 
-  // Flash → encounter
+  // Flash → encounter (respects encounterMode)
   useEffect(() => {
     if (!explore.encounterPending) return;
     if (autoRef.current) { clearInterval(autoRef.current); autoRef.current = null; }
     if (chgRef.current) { clearTimeout(chgRef.current); chgRef.current = null; }
+
+    const mode = useGameStore.getState().encounterMode;
+
+    // Auto-flee: skip entirely, just reset and keep walking
+    if (mode === 'auto-flee') {
+      useGameStore.setState({
+        explore: { ...useGameStore.getState().explore, encounterPending: false, encounterFlash: false, stepCount: 0 },
+      });
+      return;
+    }
+
     let n = 0; setFlashVisible(true);
     const fi = setInterval(() => {
       n++; setFlashVisible(n % 2 === 0);
-      if (n >= 8) { clearInterval(fi); setFlashVisible(false); if (playerPet) startEncounter(generateEnemyForZone(explore.currentZone, playerPet.stats.level)); }
+      if (n >= 8) {
+        clearInterval(fi); setFlashVisible(false);
+        if (!playerPet) return;
+        const enemy = generateEnemyForZone(explore.currentZone, playerPet.stats.level);
+
+        if (mode === 'auto-battle') {
+          // Go directly to battle
+          useGameStore.getState().startBattleFromEncounter(enemy);
+        } else {
+          // manual or auto-capture → go to encounter screen
+          startEncounter(enemy);
+        }
+      }
     }, 110);
     return () => { clearInterval(fi); setFlashVisible(false); };
   }, [explore.encounterPending]);
@@ -271,9 +303,10 @@ export default function ExploreMap() {
           <div style={{
             position: 'absolute', zIndex: 10,
             left: `${explore.avatarX}%`, top: `${explore.avatarY}%`,
-            transform: 'translate(-50%,-50%)', transition: 'left 0.25s linear, top 0.25s linear',
+            transform: `translate(-50%,-50%) ${explore.direction === 'left' ? 'scaleX(-1)' : ''} translateY(${isWalking ? (walkFrame % 2 === 0 ? -2 : 2) : 0}px)`,
+            transition: 'left 0.25s linear, top 0.25s linear',
           }}>
-            <PixelAvatar direction={explore.direction} walking={isWalking} frame={walkFrame} size={3} />
+            <PlayerAvatar gender={playerGender} avatarClass={playerClass} size={42} />
           </div>
         </div>
 
@@ -298,18 +331,75 @@ export default function ExploreMap() {
             </div>
           </div>
         )}
+
+        {/* 3x speed confirmation */}
+        {show3xConfirm && (
+          <div style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ background: '#111128', border: '1px solid #252550', borderRadius: 20, padding: '28px 24px', textAlign: 'center', maxWidth: 280 }}>
+              <p style={{ fontSize: 28, marginBottom: 8 }}>🏃‍♂️💨</p>
+              <p style={{ color: 'white', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Velocidade 3x</p>
+              <p style={{ color: '#9ca3af', fontSize: 13, lineHeight: 1.5, marginBottom: 16 }}>
+                Ativar velocidade máxima por<br />
+                <span style={{ color: '#facc15', fontWeight: 700, fontSize: 18 }}>💰 100 coins</span>
+              </p>
+              <p style={{ color: '#6b7280', fontSize: 11, marginBottom: 20 }}>Saldo atual: 💰 {coins}</p>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => setShow3xConfirm(false)} className="active:scale-95 transition-transform" style={{
+                  flex: 1, padding: '12px 0', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 12, color: '#9ca3af', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                }}>Cancelar</button>
+                <button onClick={() => {
+                  if (coins >= 100) {
+                    addCoins(-100);
+                    useGameStore.setState({ exploreSpeed: 3 });
+                    setShow3xConfirm(false);
+                  }
+                }} disabled={coins < 100} className="active:scale-95 transition-transform" style={{
+                  flex: 1, padding: '12px 0',
+                  background: coins >= 100 ? 'linear-gradient(90deg,#dc2626,#ef4444)' : '#374151',
+                  border: 'none', borderRadius: 12, color: 'white', fontSize: 13, fontWeight: 700,
+                  cursor: coins >= 100 ? 'pointer' : 'not-allowed',
+                }}>Ativar!</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Inventory bar */}
+      <div style={{ flexShrink: 0, backgroundColor: c.treeD + 'dd', padding: '8px 16px', borderTop: `1px solid ${c.tree}60` }}>
+        <InventoryPanel compact />
       </div>
 
       {/* Controls */}
-      <div style={{ flexShrink: 0, backgroundColor: c.treeD + 'ee', borderTop: `2px solid ${c.tree}` }}>
+      <div style={{ flexShrink: 0, backgroundColor: c.treeD + 'ee', borderTop: `1px solid ${c.tree}40` }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '14px 32px', gap: 12 }}>
           <button onClick={() => setPaused(!paused)} className={`rounded-2xl flex items-center justify-center active:scale-90 border-2 ${paused ? 'bg-green-600/50 border-green-400/60' : 'bg-white/10 border-white/20'}`} style={{ width: 56, height: 56 }}>
             <span style={{ fontSize: 24 }}>{paused ? '▶️' : '⏸️'}</span>
           </button>
-          <button onClick={() => setSpeed(speed === 1 ? 2 : 1)} className={`rounded-2xl flex items-center gap-2 active:scale-90 border-2 ${speed === 2 ? 'bg-orange-600/50 border-orange-400/60' : 'bg-white/10 border-white/20'}`} style={{ height: 56, padding: '0 20px' }}>
-            <span style={{ fontSize: 18 }}>🏃</span>
-            <span style={{ color: 'white', fontWeight: 700, fontSize: 15 }}>{speed}x</span>
-          </button>
+          {/* Speed buttons: 1x, 2x, 3x(paid) */}
+          {[1, 2, 3].map(s => {
+            const isActive = speed === s;
+            const is3x = s === 3;
+            return (
+              <button key={s} onClick={() => {
+                if (s === 3 && speed !== 3 && !isVip) {
+                  setShow3xConfirm(true);
+                } else {
+                  useGameStore.setState({ exploreSpeed: s });
+                }
+              }} className="rounded-2xl flex items-center justify-center active:scale-90 border-2" style={{
+                width: 50, height: 50,
+                background: isActive ? (is3x ? 'rgba(239,68,68,0.35)' : 'rgba(249,115,22,0.35)') : 'rgba(255,255,255,0.06)',
+                borderColor: isActive ? (is3x ? 'rgba(239,68,68,0.5)' : 'rgba(249,115,22,0.5)') : 'rgba(255,255,255,0.12)',
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>{s}x</div>
+                  {is3x && !isActive && <div style={{ color: isVip ? '#4ade80' : '#facc15', fontSize: 8, fontWeight: 700 }}>{isVip ? '👑FREE' : '💰100'}</div>}
+                </div>
+              </button>
+            );
+          })}
           <button onClick={() => setScreen('collection')} className="bg-white/10 border-2 border-white/20 rounded-2xl flex items-center justify-center active:scale-90" style={{ width: 56, height: 56 }}>
             <span style={{ fontSize: 20 }}>📋</span>
           </button>

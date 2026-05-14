@@ -1,0 +1,380 @@
+@import "tailwindcss";
+
+/* ===== FONTS ===== */
+.game-font {
+  font-family: 'Press Start 2P', system-ui, sans-serif;
+}
+
+.pixelated {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* ===== BUTTON ===== */
+.game-btn {
+  font-family: 'Press Start 2P', system-ui, sans-serif;
+  font-size: 11px;
+  padding: 14px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  border: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.game-btn:active {
+  transform: scale(0.96);
+}
+
+/* ===== SAFE AREAS ===== */
+.safe-top { padding-top: max(8px, env(safe-area-inset-top)); }
+.safe-bottom { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+
+/* ===== SCROLLBAR — hidden everywhere ===== */
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+*::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.anim-bounce { animation: bounce-slow 2s ease-in-out infinite; }
+
+/* Battle */
+@keyframes idle-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.animate-idle-bounce { animation: idle-bounce 1.5s ease-in-out infinite; }
+
+@keyframes idle-float {
+  0%, 100% { transform: translateY(0) scaleX(-1); }
+  50% { transform: translateY(-7px) scaleX(-1); }
+}
+.animate-idle-float { animation: idle-float 2s ease-in-out infinite; }
+
+@keyframes attack-right {
+  0%   { transform: translateX(0); }
+  35%  { transform: translateX(50px) scale(1.1); }
+  100% { transform: translateX(0) scale(1); }
+}
+.animate-attack-right { animation: attack-right 0.5s ease-in-out; }
+
+@keyframes attack-left {
+  0%   { transform: translateX(0) scaleX(-1); }
+  35%  { transform: translateX(-50px) scale(1.1) scaleX(-1); }
+  100% { transform: translateX(0) scale(1) scaleX(-1); }
+}
+.animate-attack-left { animation: attack-left 0.5s ease-in-out; }
+
+@keyframes shake-hit {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-8px); filter: brightness(2); }
+  30% { transform: translateX(8px); }
+  45% { transform: translateX(-5px); filter: brightness(1.5); }
+  60% { transform: translateX(5px); }
+}
+.animate-shake-hit { animation: shake-hit 0.4s ease-in-out; }
+
+@keyframes faint {
+  0%   { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(30px) rotate(8deg); opacity: 0.15; filter: grayscale(1); }
+}
+.animate-faint { animation: faint 0.8s ease-in forwards; }
+
+@keyframes victory-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-14px) scale(1.08); }
+}
+.animate-victory { animation: victory-bounce 0.8s ease-in-out infinite; }
+
+@keyframes damage-up {
+  0%   { transform: translateY(0) translateX(-50%); opacity: 1; }
+  100% { transform: translateY(-45px) translateX(-50%); opacity: 0; }
+}
+.animate-damage-float { animation: damage-up 0.8s ease-out forwards; }
+
+/* Encounter */
+@keyframes encounter-flash {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  20%  { opacity: 0; }
+  30%  { opacity: 1; }
+  40%  { opacity: 0; }
+  50%  { opacity: 0.9; }
+  60%  { opacity: 0; }
+  70%  { opacity: 0.8; }
+  80%  { opacity: 0; }
+  90%  { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+.animate-encounter-flash { animation: encounter-flash 1s ease-in-out; }
+
+@keyframes wild-idle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-wild-idle { animation: wild-idle 2s ease-in-out infinite; }
+
+@keyframes ball-shake {
+  0%   { transform: translateX(-50%) rotate(0deg); }
+  20%  { transform: translateX(-50%) rotate(18deg); }
+  40%  { transform: translateX(-50%) rotate(-18deg); }
+  60%  { transform: translateX(-50%) rotate(12deg); }
+  80%  { transform: translateX(-50%) rotate(-8deg); }
+  100% { transform: translateX(-50%) rotate(0deg); }
+}
+.animate-ball-shake { animation: ball-shake 0.55s ease-in-out infinite; }
+
+@keyframes ball-throw {
+  0%   { bottom: 5%; transform: translateX(-50%) scale(1); opacity: 1; }
+  60%  { bottom: 48%; transform: translateX(-50%) scale(0.6); opacity: 1; }
+  100% { bottom: 42%; transform: translateX(-50%) scale(0.5); opacity: 1; }
+}
+.animate-ball-throw { animation: ball-throw 0.5s ease-out forwards; }
+
+@keyframes sparkle-burst {
+  0%   { transform: translate(-50%,-50%) rotate(var(--angle,0deg)) translateY(0) scale(1); opacity:1; }
+  100% { transform: translate(-50%,-50%) rotate(var(--angle,0deg)) translateY(-55px) scale(0); opacity:0; }
+}
+.animate-sparkle-burst { animation: sparkle-burst 0.7s ease-out forwards; }
+
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1); opacity: 0.35; }
+  50% { transform: scale(1.06); opacity: 0.6; }
+}
+.animate-pulse-ring { animation: pulse-ring 1.5s ease-in-out infinite; }
+
+@keyframes float-up {
+  0%, 100% { transform: translateY(0); opacity: 0.3; }
+  50% { transform: translateY(-15px); opacity: 0.6; }
+}
+.animate-float-particle { animation: float-up 4s ease-in-out infinite; }
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fade-in 0.35s ease-out; }
+
+/* ===== PET SPRITE ANIMATIONS ===== */
+
+/* --- PER-STARTER MOVEMENT --- */
+
+/* 🔥 Flamarion: fiery sway, body rocks like a flame */
+@keyframes fire-sway {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); }
+  15%  { transform: translateY(-5px) rotate(2deg) scale(1.03); }
+  30%  { transform: translateY(-3px) rotate(-1.5deg) scale(1.01); }
+  50%  { transform: translateY(-8px) rotate(1deg) scale(1.04); }
+  70%  { transform: translateY(-2px) rotate(-2deg) scale(1.02); }
+  100% { transform: translateY(0) rotate(0deg) scale(1); }
+}
+.anim-fire-sway { animation: fire-sway 2s ease-in-out infinite; }
+
+/* 💧 Aqualis: gentle swim, side-to-side undulation */
+@keyframes water-swim {
+  0%   { transform: translateX(0) translateY(0) rotate(0deg); }
+  25%  { transform: translateX(6px) translateY(-4px) rotate(2deg); }
+  50%  { transform: translateX(0) translateY(-7px) rotate(0deg); }
+  75%  { transform: translateX(-6px) translateY(-3px) rotate(-2deg); }
+  100% { transform: translateX(0) translateY(0) rotate(0deg); }
+}
+.anim-water-swim { animation: water-swim 3s ease-in-out infinite; }
+
+/* 🌿 Verdex: leaf rustle, slight lean with bounce */
+@keyframes grass-rustle {
+  0%   { transform: translateY(0) rotate(0deg) scaleX(1); }
+  20%  { transform: translateY(-3px) rotate(-3deg) scaleX(1.02); }
+  40%  { transform: translateY(-6px) rotate(2deg) scaleX(0.98); }
+  60%  { transform: translateY(-4px) rotate(-1deg) scaleX(1.01); }
+  80%  { transform: translateY(-2px) rotate(1.5deg) scaleX(0.99); }
+  100% { transform: translateY(0) rotate(0deg) scaleX(1); }
+}
+.anim-grass-rustle { animation: grass-rustle 2.8s ease-in-out infinite; }
+
+/* ⚡ Voltix: jittery electric buzz, twitchy */
+@keyframes electric-jitter {
+  0%   { transform: translate(0, 0) scale(1); }
+  5%   { transform: translate(-2px, -1px) scale(1.01); }
+  10%  { transform: translate(2px, 0) scale(0.99); }
+  15%  { transform: translate(0, -3px) scale(1.02); }
+  25%  { transform: translate(-1px, 1px) scale(1); }
+  35%  { transform: translate(1px, -5px) scale(1.03); }
+  40%  { transform: translate(-2px, -2px) scale(1); }
+  50%  { transform: translate(0, -6px) scale(1.02); }
+  60%  { transform: translate(2px, -3px) scale(0.99); }
+  70%  { transform: translate(-1px, -1px) scale(1.01); }
+  80%  { transform: translate(0, -4px) scale(1); }
+  90%  { transform: translate(1px, -2px) scale(1.01); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+.anim-electric-jitter { animation: electric-jitter 1.8s linear infinite; }
+
+/* 🌑 Umbrix: shadow pulse, fades in/out with drift */
+@keyframes dark-pulse {
+  0%   { transform: translateY(0) scale(1); opacity: 1; filter: brightness(1); }
+  25%  { transform: translateY(-4px) scale(1.04); opacity: 0.85; filter: brightness(0.9); }
+  50%  { transform: translateY(-8px) scale(1.06); opacity: 0.7; filter: brightness(0.8); }
+  75%  { transform: translateY(-4px) scale(1.03); opacity: 0.9; filter: brightness(0.95); }
+  100% { transform: translateY(0) scale(1); opacity: 1; filter: brightness(1); }
+}
+.anim-dark-pulse { animation: dark-pulse 3s ease-in-out infinite; }
+
+/* ❄️ Glacius: slow crystalline breathe, gentle sway */
+@keyframes ice-breathe {
+  0%   { transform: translateY(0) scaleY(1) scaleX(1); }
+  30%  { transform: translateY(-4px) scaleY(1.03) scaleX(0.98); }
+  50%  { transform: translateY(-7px) scaleY(1.05) scaleX(0.97); }
+  70%  { transform: translateY(-3px) scaleY(1.02) scaleX(0.99); }
+  100% { transform: translateY(0) scaleY(1) scaleX(1); }
+}
+.anim-ice-breathe { animation: ice-breathe 3.5s ease-in-out infinite; }
+
+/* Generic idle for non-starters */
+@keyframes generic-idle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.anim-generic-idle { animation: generic-idle 2.5s ease-in-out infinite; }
+
+/* --- PARTICLE ANIMATIONS --- */
+
+/* 🔥 Fire embers rising */
+@keyframes fire-ember {
+  0%   { transform: translateY(0) scale(1); opacity: 0.9; }
+  30%  { transform: translateY(-18px) translateX(4px) scale(0.8); opacity: 0.7; }
+  60%  { transform: translateY(-35px) translateX(-2px) scale(0.5); opacity: 0.4; }
+  100% { transform: translateY(-50px) translateX(3px) scale(0.1); opacity: 0; }
+}
+.anim-fire-ember { animation: fire-ember 1.2s ease-out infinite; }
+
+/* 💧 Water drops rising */
+@keyframes water-drop {
+  0%   { transform: translateY(0) scale(0.4); opacity: 0; }
+  15%  { opacity: 0.7; transform: scale(0.8); }
+  100% { transform: translateY(-55px) translateX(6px) scale(1.1); opacity: 0; }
+}
+.anim-water-drop { animation: water-drop 2.5s ease-in-out infinite; }
+
+/* 💧 Water reflection pulse */
+@keyframes water-ref {
+  0%, 100% { transform: scaleX(1); opacity: 0.3; }
+  50% { transform: scaleX(1.3); opacity: 0.5; }
+}
+.anim-water-reflection { animation: water-ref 2s ease-in-out infinite; }
+
+/* 🌿 Leaves floating */
+@keyframes leaf-float {
+  0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.7; }
+  25%  { transform: translateY(8px) translateX(8px) rotate(90deg); opacity: 0.6; }
+  50%  { transform: translateY(18px) translateX(4px) rotate(180deg); opacity: 0.4; }
+  75%  { transform: translateY(28px) translateX(-4px) rotate(270deg); opacity: 0.2; }
+  100% { transform: translateY(40px) translateX(-8px) rotate(360deg); opacity: 0; }
+}
+.anim-leaf-float { animation: leaf-float 4s ease-in-out infinite; }
+
+/* 🌿 Pollen sparkle */
+@keyframes pollen {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 0.7; transform: scale(1.5); }
+}
+.anim-pollen { animation: pollen 2s ease-in-out infinite; }
+
+/* ⚡ Zap flash */
+@keyframes zap {
+  0%   { opacity: 0; transform: scale(0.3) rotate(-10deg); }
+  15%  { opacity: 1; transform: scale(1.3) rotate(5deg); }
+  30%  { opacity: 0; transform: scale(0.8) rotate(0deg); }
+  100% { opacity: 0; }
+}
+.anim-zap { animation: zap 1s ease-in-out infinite; }
+
+/* ⚡ Crackle lines */
+@keyframes crackle {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.4; }
+}
+.anim-crackle { animation: crackle 0.8s ease-in-out infinite; }
+
+/* 🌑 Shadow orbs drift */
+@keyframes shadow-orb {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.4; }
+  33%  { transform: translate(5px, -8px) scale(1.4); opacity: 0.2; }
+  66%  { transform: translate(-4px, 4px) scale(0.7); opacity: 0.5; }
+  100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+}
+.anim-shadow-orb { animation: shadow-orb 3.5s ease-in-out infinite; }
+
+/* 🌑 Dark mist */
+@keyframes dark-mist {
+  0%, 100% { opacity: 0.3; transform: translateX(0); }
+  50% { opacity: 0.6; transform: translateX(5px); }
+}
+.anim-dark-mist { animation: dark-mist 4s ease-in-out infinite; }
+
+/* ❄️ Snowflakes falling */
+@keyframes snow {
+  0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.6; }
+  100% { transform: translateY(80px) translateX(8px) rotate(360deg); opacity: 0; }
+}
+.anim-snow { animation: snow 3s linear infinite; }
+
+/* ❄️ Frost shimmer */
+@keyframes frost-shimmer {
+  0%   { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+.anim-frost-shimmer {
+  animation: frost-shimmer 4s linear infinite;
+  background-size: 200% 100%;
+}
+
+/* Holographic card shine for rare+ cards */
+@keyframes holo-shine {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.anim-holo-shine { animation: holo-shine 4s ease-in-out infinite; background-size: 200% 100%; }
+
+/* ===== BASE ===== */
+* {
+  margin: 0; padding: 0; box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+html {
+  height: 100%;
+  overscroll-behavior: none;
+}
+body {
+  background: #050510; color: white;
+  font-family: system-ui, -apple-system, sans-serif;
+  height: 100%;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+  font-size: 16px;
+  overflow: hidden;
+}
+#root {
+  height: 100dvh;
+}
+::selection {
+  background: #eab308; color: #0a0a2e;
+}
+input[type="color"] { -webkit-appearance: none; border: none; padding: 0; }
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: 1px solid #666; border-radius: 4px; }
+.touch-none { touch-action: none; }

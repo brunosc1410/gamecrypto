@@ -120,7 +120,7 @@ export default function EncounterScreen() {
   // Auto-catch: pay 10 coins, guaranteed catch
   const doAutoCatch = async () => {
     if (busy || !pet) return;
-    if (coins < 10) { setMsg('Precisa de 10 🪙!'); return; }
+    if (coins < 10) { setMsg('Precisa de 10 💰!'); return; }
 
     setBusy(true);
     setResult('none');
@@ -168,7 +168,7 @@ export default function EncounterScreen() {
         <span style={{ color: '#eab308', fontWeight: 700, fontSize: 13 }} className="animate-pulse">⭐ PET SELVAGEM</span>
         <div style={{ display: 'flex', gap: 10, fontSize: 13, fontWeight: 700 }}>
           <span style={{ color: '#06b6d4' }}>🔮{cryptoBalls}</span>
-          <span style={{ color: '#eab308' }}>🪙{coins}</span>
+          <span style={{ color: '#eab308' }}>💰{coins}</span>
         </div>
       </div>
 
@@ -349,7 +349,7 @@ export default function EncounterScreen() {
                 >
                   <div style={{ fontSize: 20, marginBottom: 4 }}>🎯</div>
                   <div style={{ fontSize: 11, fontWeight: 700 }}>Auto</div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#fde68a', marginTop: 2 }}>🪙10</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#fde68a', marginTop: 2 }}>💰10</div>
                 </button>
 
                 <button
@@ -412,7 +412,7 @@ export default function EncounterScreen() {
               </p>
               <p style={{ color: '#d1d5db', fontSize: 15, marginTop: 10, lineHeight: 1.35 }}>
                 {result === 'caught'
-                  ? `${pet.name} foi adicionado à sua coleção e você recebeu +50 🪙.`
+                  ? `${pet.name} foi adicionado à sua coleção e você recebeu +50 💰.`
                   : result === 'fled'
                     ? `${pet.name} escapou antes da captura.`
                     : `${pet.name} escapou depois das tentativas.`}

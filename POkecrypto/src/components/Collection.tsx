@@ -55,7 +55,7 @@ export default function Collection() {
         <span style={{ color: '#eab308', fontWeight: 700, fontSize: 17 }}>📋 Coleção</span>
 
         <div style={{ display: 'flex', gap: 12, fontSize: 12, fontWeight: 700 }}>
-          <span style={{ color: '#eab308' }}>🪙{coins}</span>
+          <span style={{ color: '#eab308' }}>💰{coins}</span>
           <span style={{ color: '#06b6d4' }}>🔮{cryptoBalls}</span>
         </div>
       </div>

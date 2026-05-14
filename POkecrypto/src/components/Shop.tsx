@@ -11,7 +11,7 @@ export default function Shop() {
       act: () => { if (coins >= 100) { addCoins(-100); useGameStore.setState({ cryptoBalls: cryptoBalls + 5 }); notify('✅ +5 CryptoBalls!'); } else notify('❌ Coins insuficientes!'); } },
     { id: 'b20', name: 'CryptoBalls ×20', desc: '+20 bolas', price: 350, cur: 'coins' as const, emoji: '🔮',
       act: () => { if (coins >= 350) { addCoins(-350); useGameStore.setState({ cryptoBalls: cryptoBalls + 20 }); notify('✅ +20 CryptoBalls!'); } else notify('❌ Coins insuficientes!'); } },
-    { id: 'cp', name: 'Pacote Coins', desc: '+200 coins', price: 2, cur: 'gems' as const, emoji: '🪙',
+    { id: 'cp', name: 'Pacote Coins', desc: '+200 coins', price: 2, cur: 'gems' as const, emoji: '💰',
       act: () => { if (gems >= 2) { addCoins(200); useGameStore.setState({ gems: gems - 2 }); notify('✅ +200 Coins!'); } else notify('❌ Sem gemas!'); } },
     { id: 'hp', name: 'Poção Vida', desc: '+10 HP máx', price: 50, cur: 'coins' as const, emoji: '❤️',
       act: () => { if (selectedPetId && coins >= 50) { upgradeStat(selectedPetId, 'hp'); notify('✅ +10 HP!'); } else notify('❌ Erro!'); } },
@@ -27,14 +27,13 @@ export default function Shop() {
 
       {/* Header */}
       <div style={{
-        padding: '16px 36px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '16px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexShrink: 0, background: '#111128', borderBottom: '1px solid #252550',
       }}>
         <button onClick={() => setScreen('menu')} style={{ color: '#eab308', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>← Menu</button>
         <span style={{ color: '#a855f7', fontWeight: 700, fontSize: 17 }}>🛒 Loja</span>
         <div style={{ display: 'flex', gap: 10, fontSize: 12, fontWeight: 700 }}>
-          <span style={{ color: '#eab308' }}>🪙{coins}</span>
+          <span style={{ color: '#eab308' }}>💰{coins}</span>
           <span style={{ color: '#a855f7' }}>💎{gems}</span>
           <span style={{ color: '#06b6d4' }}>🔮{cryptoBalls}</span>
         </div>
@@ -74,7 +73,7 @@ export default function Shop() {
                 marginTop: 10, fontWeight: 700, fontSize: 14,
                 color: it.cur === 'coins' ? '#eab308' : '#a855f7',
               }}>
-                {it.cur === 'coins' ? '🪙' : '💎'} {it.price}
+                {it.cur === 'coins' ? '💰' : '💎'} {it.price}
               </span>
 
               <button onClick={it.act} className="active:scale-95 transition-transform" style={{
@@ -100,7 +99,7 @@ export default function Shop() {
             border: 'none', borderRadius: 12, color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer',
             fontFamily: "'Press Start 2P', system-ui",
           }}>
-            Coletar 🪙 50
+            Coletar 💰 50
           </button>
         </div>
       </div>

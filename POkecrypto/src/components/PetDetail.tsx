@@ -79,7 +79,7 @@ export default function PetDetail({ pet, onBack }: Props) {
           <div style={{ background: '#12122a', borderRadius: '0 0 12px 12px', padding: 20, border: '1px solid #2a2a5a', borderTop: 'none' }}>
             {tab === 'stats' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <p style={{ color: '#facc15', fontSize: 14, fontWeight: 600 }}>Upgrade: 🪙{cost} · Saldo: 🪙{coins}</p>
+                <p style={{ color: '#facc15', fontSize: 14, fontWeight: 600 }}>Upgrade: 💰{cost} · Saldo: 💰{coins}</p>
                 {[
                   { k: 'hp' as const, l: 'HP', v: pet.stats.maxHp, c: '#22c55e', e: '❤️' },
                   { k: 'attack' as const, l: 'Ataque', v: pet.stats.attack, c: '#ef4444', e: '⚔️' },

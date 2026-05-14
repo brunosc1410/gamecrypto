@@ -43,7 +43,7 @@ export default function MainMenu() {
           {pets.length > 0 && (
             <div style={{ width: '100%', marginTop: 28, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {[
-                { e: '🪙', v: coins, c: '#eab308' },
+                { e: '💰', v: coins, c: '#eab308' },
                 { e: '💎', v: gems, c: '#a855f7' },
                 { e: '🔮', v: cryptoBalls, c: '#06b6d4' },
                 { e: '🐾', v: pets.length, c: '#22c55e' },

@@ -2,7 +2,12 @@
 
 /* ===== FONTS ===== */
 .game-font {
-  font-family: 'Press Start 2P', system-ui, sans-serif;
+  font-family: 'Press Start 2P', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', system-ui, sans-serif;
+}
+
+.emoji-font {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', system-ui, sans-serif;
+  font-variant-emoji: emoji;
 }
 
 .pixelated {
@@ -12,7 +17,7 @@
 
 /* ===== BUTTON ===== */
 .game-btn {
-  font-family: 'Press Start 2P', system-ui, sans-serif;
+  font-family: 'Press Start 2P', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', system-ui, sans-serif;
   font-size: 11px;
   padding: 14px 24px;
   border-radius: 12px;
@@ -361,7 +366,7 @@ html {
 }
 body {
   background: #050510; color: white;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: system-ui, -apple-system, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
   height: 100%;
   touch-action: manipulation;
   overscroll-behavior: none;

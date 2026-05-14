@@ -63,7 +63,7 @@ export default function Wallet() {
           <p style={{ color: '#facc15', fontWeight: 700, fontSize: 14, marginBottom: 16 }}>💰 Ativos</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
             {[
-              { e: '🪙', v: coins, l: 'Coins', bc: 'rgba(234,179,8,0.12)', brd: 'rgba(234,179,8,0.2)' },
+              { e: '💰', v: coins, l: 'Coins', bc: 'rgba(234,179,8,0.12)', brd: 'rgba(234,179,8,0.2)' },
               { e: '💎', v: gems, l: 'Gemas', bc: 'rgba(168,85,247,0.12)', brd: 'rgba(168,85,247,0.2)' },
               { e: '🐾', v: `${pets.filter(p => p.isNFT).length}/${pets.length}`, l: 'NFTs', bc: 'rgba(6,182,212,0.12)', brd: 'rgba(6,182,212,0.2)' },
             ].map((a, i) => (

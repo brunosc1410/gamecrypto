@@ -25,8 +25,8 @@ function isInTallGrass(px: number, py: number): boolean {
 }
 
 const BORDER_ELEM: Record<string, { emoji: string; size: number }> = {
-  forest: { emoji: '🌲', size: 22 }, volcano: { emoji: '🪨', size: 20 }, ocean: { emoji: '🏖️', size: 18 },
-  thunder: { emoji: '🌾', size: 18 }, shadow: { emoji: '🗿', size: 20 }, glacier: { emoji: '🧊', size: 18 },
+  forest: { emoji: '🌲', size: 22 }, volcano: { emoji: '⛰️', size: 20 }, ocean: { emoji: '🏝️', size: 18 },
+  thunder: { emoji: '🌾', size: 18 }, shadow: { emoji: '🗿', size: 20 }, glacier: { emoji: '❄️', size: 18 },
 };
 
 const PAL: Record<string, { bg: string; bgAlt: string; path: string; pathE: string; tree: string; treeD: string; trunk: string; tg: string; tgL: string; tgBlade: string; fl1: string; fl2: string; borderBg: string }> = {

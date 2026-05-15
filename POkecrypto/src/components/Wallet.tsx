@@ -1,14 +1,14 @@
 import { useGameStore } from '../store/gameStore';
 
 export default function Wallet() {
-  const { setScreen, walletConnected, walletAddress, connectWallet, coins, gems, pets } = useGameStore();
+  const { walletConnected, walletAddress, connectWallet, coins, gems, pets } = useGameStore();
   const card = { background: '#111128', border: '1px solid #252550', borderRadius: 14 };
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0b0b20' }}>
       {/* Header */}
       <div style={{ padding: '16px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: '#111128', borderBottom: '1px solid #252550' }}>
-        <button onClick={() => setScreen('menu')} style={{ color: '#eab308', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>← Menu</button>
+        <button onClick={() => useGameStore.getState().goBack()} style={{ color: '#eab308', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>← Voltar</button>
         <span style={{ color: '#60a5fa', fontWeight: 700, fontSize: 17 }}>👛 Carteira</span>
         <div />
       </div>

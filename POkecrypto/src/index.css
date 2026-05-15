@@ -244,3 +244,25 @@
   50% { transform: translateY(-6px); }
 }
 .anim-generic-idle { animation: generic-idle 2s ease-in-out infinite; }
+
+/* ===== RARITY BORDER SHINE ===== */
+@keyframes shine-rare {
+  0%   { box-shadow: 0 0 4px #4a9eff30, inset 0 0 4px #4a9eff10; }
+  50%  { box-shadow: 0 0 12px #4a9eff60, inset 0 0 8px #4a9eff20; }
+  100% { box-shadow: 0 0 4px #4a9eff30, inset 0 0 4px #4a9eff10; }
+}
+@keyframes shine-epic {
+  0%   { box-shadow: 0 0 6px #c06eff30, inset 0 0 4px #c06eff10; }
+  50%  { box-shadow: 0 0 18px #c06eff60, inset 0 0 10px #c06eff20; }
+  100% { box-shadow: 0 0 6px #c06eff30, inset 0 0 4px #c06eff10; }
+}
+@keyframes shine-legendary {
+  0%   { box-shadow: 0 0 8px #ffb83040, inset 0 0 6px #ffb83015; }
+  25%  { box-shadow: 0 0 20px #ffb83080, inset 0 0 12px #ffb83030; }
+  50%  { box-shadow: 0 0 8px #ffd70050, inset 0 0 6px #ffd70020; }
+  75%  { box-shadow: 0 0 22px #ffb830a0, inset 0 0 14px #ffb83035; }
+  100% { box-shadow: 0 0 8px #ffb83040, inset 0 0 6px #ffb83015; }
+}
+.shine-rare      { animation: shine-rare 2.5s ease-in-out infinite; }
+.shine-epic      { animation: shine-epic 2s ease-in-out infinite; }
+.shine-legendary { animation: shine-legendary 1.8s ease-in-out infinite; }

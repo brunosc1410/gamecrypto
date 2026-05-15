@@ -15,7 +15,7 @@ const ELEMS: { key: PetElement | 'all'; emoji: string }[] = [
 ];
 
 export default function Codex() {
-  const { setScreen, seenPets, pets } = useGameStore();
+  const { seenPets, pets } = useGameStore();
   const [filter, setFilter] = useState<PetElement | 'all'>('all');
   const [sel, setSel] = useState<string | null>(null);
 
@@ -31,7 +31,7 @@ export default function Codex() {
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0b0b20' }}>
       {/* Header */}
       <div style={{ padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: '#111128', borderBottom: '1px solid #252550' }}>
-        <button onClick={() => setScreen('menu')} style={{ color: '#eab308', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>← Menu</button>
+        <button onClick={() => useGameStore.getState().goBack()} style={{ color: '#eab308', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>← Voltar</button>
         <span style={{ color: '#f87171', fontWeight: 700, fontSize: 17 }}>📕 Codex</span>
         <div style={{ textAlign: 'right' }}>
           <p style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>{totalOwned}/{ALL_PETS.length}</p>

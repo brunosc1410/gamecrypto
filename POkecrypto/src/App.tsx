@@ -11,6 +11,17 @@ import Profile from './components/Profile';
 
 export default function App() {
   const screen = useGameStore((s) => s.screen);
+  const encounterActive = useGameStore((s) => s.encounter.active);
+  const battleActive = useGameStore((s) => s.battle.isActive);
+
+  /*
+    Safety: if there's an active encounter or battle,
+    always show that screen regardless of what screen state says.
+    This prevents bugs from navigating away during combat.
+  */
+  const effectiveScreen = battleActive ? 'battle'
+    : encounterActive ? 'encounter'
+    : screen;
 
   return (
     <div
@@ -41,15 +52,15 @@ export default function App() {
           boxShadow: '0 30px 80px rgba(0,0,0,0.65)',
         }}
       >
-        {screen === 'menu' && <MainMenu />}
-        {screen === 'collection' && <Collection />}
-        {screen === 'battle' && <Battle />}
-        {screen === 'shop' && <Shop />}
-        {screen === 'wallet' && <Wallet />}
-        {screen === 'explore' && <ExploreMap />}
-        {screen === 'encounter' && <EncounterScreen />}
-        {screen === 'codex' && <Codex />}
-        {screen === 'profile' && <Profile />}
+        {effectiveScreen === 'menu' && <MainMenu />}
+        {effectiveScreen === 'collection' && <Collection />}
+        {effectiveScreen === 'battle' && <Battle />}
+        {effectiveScreen === 'shop' && <Shop />}
+        {effectiveScreen === 'wallet' && <Wallet />}
+        {effectiveScreen === 'explore' && <ExploreMap />}
+        {effectiveScreen === 'encounter' && <EncounterScreen />}
+        {effectiveScreen === 'codex' && <Codex />}
+        {effectiveScreen === 'profile' && <Profile />}
       </div>
     </div>
   );

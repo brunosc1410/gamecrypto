@@ -13,6 +13,7 @@ export interface Inventory {
 
 interface GameState {
   screen: GameScreen;
+  screenHistory: GameScreen[];
   playerName: string;
   playerGender: AvatarGender;
   playerClass: AvatarClass;
@@ -35,6 +36,7 @@ interface GameState {
   walletAddress: string | null;
 
   setScreen: (screen: GameScreen) => void;
+  goBack: () => void;
   setPlayerName: (name: string) => void;
   setPlayerGender: (g: AvatarGender) => void;
   setPlayerClass: (c: AvatarClass) => void;
@@ -92,6 +94,7 @@ const defaultBattle: BattleState = {
 
 const defaultExplore: ExploreState = {
   isExploring: false,
+  searching: true,
   currentZone: 'forest',
   avatarX: 50,
   avatarY: 50,
@@ -116,6 +119,7 @@ export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
       screen: 'menu',
+      screenHistory: [] as GameScreen[],
       playerName: 'Treinador',
       playerGender: 'male' as AvatarGender,
       playerClass: 'warrior' as AvatarClass,
@@ -137,7 +141,15 @@ export const useGameStore = create<GameState>()(
       walletConnected: false,
       walletAddress: null,
 
-      setScreen: (screen) => set({ screen }),
+      setScreen: (screen) => set((s) => ({
+        screenHistory: [...s.screenHistory.slice(-10), s.screen],
+        screen,
+      })),
+      goBack: () => set((s) => {
+        const history = [...s.screenHistory];
+        const prev = history.pop() || 'menu';
+        return { screen: prev, screenHistory: history };
+      }),
       setPlayerName: (name) => set({ playerName: name }),
       setPlayerGender: (g) => set({ playerGender: g }),
       setPlayerClass: (c) => set({ playerClass: c }),
@@ -333,9 +345,22 @@ export const useGameStore = create<GameState>()(
         const turn = battle.turn + 1;
         const pPet = battle.playerPet;
         const ePet = battle.enemyPet;
+
         const playerFirst = pPet.stats.speed >= ePet.stats.speed;
+        const playerAttacksThisTurn = playerFirst ? turn % 2 === 1 : turn % 2 === 0;
+
         let pDmgShow: number | null = null;
         let eDmgShow: number | null = null;
+
+        if (turn === 1) {
+          if (pPet.stats.speed > ePet.stats.speed) {
+            logs = addLog(logs, `💨 ${pPet.name} é mais rápido e ataca primeiro!`, 'info');
+          } else if (ePet.stats.speed > pPet.stats.speed) {
+            logs = addLog(logs, `💨 ${ePet.name} é mais rápido e ataca primeiro!`, 'info');
+          } else {
+            logs = addLog(logs, `⚖️ Velocidades iguais — ${pPet.name} age primeiro!`, 'info');
+          }
+        }
 
         const calcDamage = (attacker: Pet, defender: Pet, defHp: number, isPlayer: boolean) => {
           const baseDamage = Math.max(1, attacker.stats.attack - defender.stats.defense * 0.5);
@@ -358,25 +383,23 @@ export const useGameStore = create<GameState>()(
           return Math.max(0, defHp - damage);
         };
 
-        if (playerFirst) {
+        let anim: BattleState['currentAnimation'];
+
+        if (playerAttacksThisTurn) {
           enemyCurrentHp = calcDamage(pPet, ePet, enemyCurrentHp, true);
-          if (enemyCurrentHp > 0) playerCurrentHp = calcDamage(ePet, pPet, playerCurrentHp, false);
+          anim = { type: enemyCurrentHp <= 0 ? 'faint-enemy' : 'attack-player', duration: enemyCurrentHp <= 0 ? 800 : 500 };
         } else {
           playerCurrentHp = calcDamage(ePet, pPet, playerCurrentHp, false);
-          if (playerCurrentHp > 0) enemyCurrentHp = calcDamage(pPet, ePet, enemyCurrentHp, true);
+          anim = { type: playerCurrentHp <= 0 ? 'faint-player' : 'attack-enemy', duration: playerCurrentHp <= 0 ? 800 : 500 };
         }
 
         let winner: 'player' | 'enemy' | null = null;
-        let anim: BattleState['currentAnimation'] = { type: 'attack-player', duration: 400 };
-
         if (enemyCurrentHp <= 0) {
           winner = 'player';
           logs = addLog(logs, `🎉 ${pPet.name} venceu!`, 'win');
-          anim = { type: 'faint-enemy', duration: 800 };
         } else if (playerCurrentHp <= 0) {
           winner = 'enemy';
           logs = addLog(logs, `😢 ${pPet.name} foi derrotado...`, 'lose');
-          anim = { type: 'faint-player', duration: 800 };
         }
 
         set({
@@ -482,9 +505,10 @@ export const useGameStore = create<GameState>()(
         set({
           explore: {
             isExploring: true,
+            searching: true,
             currentZone: zone,
-            avatarX: 50,
-            avatarY: 70,
+            avatarX: Math.round((10 / 19) * 100),
+            avatarY: Math.round((12 / 15) * 100),
             direction: 'down',
             stepCount: 0,
             encounterPending: false,
@@ -498,8 +522,8 @@ export const useGameStore = create<GameState>()(
         set((s) => ({
           explore: {
             ...s.explore,
-            avatarX: Math.max(5, Math.min(95, s.explore.avatarX + dx)),
-            avatarY: Math.max(5, Math.min(95, s.explore.avatarY + dy)),
+            avatarX: Math.max(0, Math.min(100, s.explore.avatarX + dx)),
+            avatarY: Math.max(0, Math.min(100, s.explore.avatarY + dy)),
             direction: dir,
             stepCount: s.explore.stepCount + 1,
           },

@@ -32,7 +32,7 @@ const ELEMENT_FILTERS: { key: FilterElement; emoji: string }[] = [
 ];
 
 export default function Collection() {
-  const { pets, selectedPetId, selectPet, setScreen, coins, cryptoBalls } = useGameStore();
+  const { pets, selectedPetId, selectPet, coins, cryptoBalls } = useGameStore();
   const [viewMode, setViewMode] = useState<'grid' | 'detail'>('grid');
   const [actionPet, setActionPet] = useState<Pet | null>(null);
   const [filterRarity, setFilterRarity] = useState<FilterRarity>('all');
@@ -67,7 +67,7 @@ export default function Collection() {
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0b0b20' }}>
       {/* Header */}
       <div style={{ padding: '16px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: '#111128', borderBottom: '1px solid #252550' }}>
-        <button onClick={() => setScreen('menu')} style={{ color: '#eab308', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>← Menu</button>
+        <button onClick={() => useGameStore.getState().goBack()} style={{ color: '#eab308', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>← Voltar</button>
         <span style={{ color: '#eab308', fontWeight: 700, fontSize: 17 }}>🐾 Meus PETS</span>
         <div style={{ display: 'flex', gap: 10, fontSize: 12, fontWeight: 700 }}>
           <span style={{ color: '#eab308' }}>💰{coins}</span>

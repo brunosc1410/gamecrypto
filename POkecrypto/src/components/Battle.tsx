@@ -4,7 +4,7 @@ import { ELEMENT_EMOJIS } from '../data/pets';
 import PetSprite from './PetSprite';
 
 export default function Battle() {
-  const { battle, processBattleTurn, endBattle, setBattleSpeed, setScreen, clearBattleAnimation } = useGameStore();
+  const { battle, processBattleTurn, endBattle, setBattleSpeed, setScreen, clearBattleAnimation, coins, isVip } = useGameStore();
   const logRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const animTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -13,13 +13,15 @@ export default function Battle() {
   const [displayExpToNext, setDisplayExpToNext] = useState(100);
   const [displayLevel, setDisplayLevel] = useState(1);
   const [expGainText, setExpGainText] = useState<number | null>(null);
+  const [speedConfirm, setSpeedConfirm] = useState<number | null>(null);
 
   useEffect(() => {
-    if (battle.isActive && battle.isAutoPlaying && !battle.winner) {
+    if (battle.isActive && battle.isAutoPlaying && !battle.winner && speedConfirm === null) {
       intervalRef.current = setInterval(processBattleTurn, battle.battleSpeed);
       return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
     }
-  }, [battle.isActive, battle.isAutoPlaying, battle.winner, battle.battleSpeed, processBattleTurn]);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [battle.isActive, battle.isAutoPlaying, battle.winner, battle.battleSpeed, processBattleTurn, speedConfirm]);
 
   useEffect(() => {
     if (battle.playerPet) {
@@ -93,8 +95,23 @@ export default function Battle() {
     return '#d1d5db';
   };
 
+  const requestBattleSpeedChange = (speed: number) => {
+    if (speed === battle.battleSpeed) return;
+    setSpeedConfirm(speed);
+  };
+
+  const confirmBattleSpeedChange = () => {
+    if (speedConfirm === null) return;
+    if (speedConfirm === 700 && !isVip) {
+      if (coins < 1000) return;
+      useGameStore.setState((s) => ({ coins: s.coins - 1000 }));
+    }
+    setBattleSpeed(speedConfirm);
+    setSpeedConfirm(null);
+  };
+
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0f0f2e' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0f0f2e', position: 'relative' }}>
       {/* Header */}
       <div style={{ padding: '16px 28px 14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: '#111128', borderBottom: '1px solid #252550' }}>
         <div style={{ textAlign: 'center', flex: 1, minWidth: 0 }}>
@@ -102,16 +119,67 @@ export default function Battle() {
           <p style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>Turno {battle.turn}</p>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          {[{ l: '1x', s: 2000 }, { l: '2x', s: 1200 }, { l: '5x', s: 600 }].map((sp) => (
-            <button key={sp.l} onClick={() => setBattleSpeed(sp.s)} className="active:scale-90 transition-transform" style={{
+          {[
+            { l: '1x', s: 2000 },
+            { l: '2x', s: 1200 },
+            { l: '5x', s: 700 },
+          ].map((sp) => (
+            <button key={sp.l} onClick={() => requestBattleSpeedChange(sp.s)} className="active:scale-90 transition-transform" style={{
               padding: '5px 10px', borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: 'pointer',
               background: battle.battleSpeed === sp.s ? 'rgba(250,204,21,0.2)' : 'rgba(255,255,255,0.05)',
               border: battle.battleSpeed === sp.s ? '1px solid rgba(250,204,21,0.4)' : '1px solid rgba(255,255,255,0.08)',
               color: battle.battleSpeed === sp.s ? '#facc15' : '#6b7280',
-            }}>{sp.l}</button>
+            }}>{sp.l}{sp.s === 700 ? (!isVip ? '💰' : '👑') : ''}</button>
           ))}
         </div>
       </div>
+
+      {/* Speed confirm modal */}
+      {speedConfirm !== null && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 60, background: 'rgba(0,0,0,0.7)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+        }}>
+          <div style={{
+            background: '#111128', border: '1px solid #252550', borderRadius: 18,
+            padding: 22, textAlign: 'center', maxWidth: 290, width: '100%',
+          }}>
+            <p style={{ fontSize: 28, marginBottom: 6 }}>{speedConfirm === 700 ? '⚡' : speedConfirm === 1200 ? '🏃' : '⏱️'}</p>
+            <p style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>
+              Ativar velocidade {speedConfirm === 2000 ? '1x' : speedConfirm === 1200 ? '2x' : '5x'}?
+            </p>
+            {speedConfirm === 700 && !isVip ? (
+              <>
+                <p style={{ color: '#9ca3af', fontSize: 10, marginTop: 8 }}>Modo 5x custa</p>
+                <p style={{ color: '#eab308', fontWeight: 700, fontSize: 16, marginTop: 4 }}>💰 1000 moedas</p>
+                <p style={{ color: '#6b7280', fontSize: 9, marginTop: 4 }}>Saldo: 💰 {coins}</p>
+              </>
+            ) : speedConfirm === 700 && isVip ? (
+              <p style={{ color: '#4ade80', fontSize: 11, marginTop: 8 }}>👑 5x grátis para VIP!</p>
+            ) : (
+              <p style={{ color: '#9ca3af', fontSize: 10, marginTop: 8 }}>Deseja mesmo mudar a velocidade da batalha?</p>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
+              <button onClick={() => setSpeedConfirm(null)} style={{
+                padding: '10px 0', borderRadius: 10, border: '1px solid #374151', background: 'none',
+                color: '#9ca3af', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+              }}>Cancelar</button>
+              <button
+                onClick={confirmBattleSpeedChange}
+                disabled={speedConfirm === 700 && !isVip && coins < 1000}
+                className="active:scale-95 transition-transform"
+                style={{
+                  padding: '10px 0', borderRadius: 10, border: 'none',
+                  cursor: speedConfirm === 700 && !isVip && coins < 1000 ? 'not-allowed' : 'pointer',
+                  background: speedConfirm === 700 && !isVip && coins < 1000 ? '#374151' : 'linear-gradient(90deg,#16a34a,#22c55e)',
+                  color: 'white', fontSize: 11, fontWeight: 700,
+                  opacity: speedConfirm === 700 && !isVip && coins < 1000 ? 0.5 : 1,
+                }}
+              >✓ Confirmar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Battle field */}
       <div style={{ flex: 1, position: 'relative', background: 'linear-gradient(180deg, #0a0a2e 0%, #151535 50%, #1a2a1a 100%)', overflow: 'hidden' }}>

@@ -11,14 +11,31 @@ const ELEM_ANIM: Record<PetElement, string> = {
   ice: 'anim-ice-shimmer',
 };
 
-/* ── starter dragon images (from public/) ── */
+/* ── starter dragon images (transparent PNGs from GitHub) ── */
+const GH_RAW = 'https://raw.githubusercontent.com/brunosc1410/gamecrypto/main/POkecrypto/public/images';
 const STARTER_IMAGES: Record<string, string> = {
-  Flamarion: '/images/pet-flamarion.png',
-  Aqualis:   '/images/pet-aqualis.png',
-  Verdex:    '/images/pet-verdex.png',
-  Voltix:    '/images/pet-voltix.png',
-  Umbrix:    '/images/pet-umbrix.png',
-  Glacius:   '/images/pet-glacius.png',
+  Flamarion: `${GH_RAW}/pet-flamarion.png`,
+  Aqualis:   `${GH_RAW}/pet-aqualis.png`,
+  Verdex:    `${GH_RAW}/pet-verdex.png`,
+  Voltix:    `${GH_RAW}/pet-voltix.png`,
+  Umbrix:    `${GH_RAW}/pet-umbrix.png`,
+  Glacius:   `${GH_RAW}/pet-glacius.png`,
+};
+
+/*
+  Per-pet visual scale correction via CSS transform.
+  The PNG files have different amounts of transparent padding around the dragon.
+  transform: scale() zooms the rendered image so all dragons look the same size.
+  Verdex/Flamarion/Glacius = 1.0 (reference — they fill their PNG well).
+  Aqualis/Voltix/Umbrix have more empty space, so we scale them up.
+*/
+const PET_SCALE: Record<string, number> = {
+  Flamarion: 1.0,
+  Aqualis:   1.5,
+  Verdex:    1.0,
+  Voltix:    1.5,
+  Umbrix:    1.3,
+  Glacius:   1.0,
 };
 
 /* ── visual constants ── */
@@ -62,8 +79,43 @@ function EmojiSprite({ pet, size }: { pet: Pet; size: number }) {
   );
 }
 
+/*
+  Standardized image container:
+  All pet images render inside a SQUARE box of `size × size`.
+  The image is forced to fill exactly 82% of that box (both width and height)
+  and is centered, so every pet looks the same size regardless of original PNG dimensions.
+*/
+function StarterSprite({ src, name, size }: { src: string; name: string; size: number }) {
+  const scale = PET_SCALE[name] ?? 1.0;
+  return (
+    <div style={{
+      width: size,
+      height: size,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+    }}>
+      <img
+        src={src}
+        alt={name}
+        style={{
+          width: size,
+          height: size,
+          objectFit: 'contain',
+          objectPosition: 'center center',
+          transform: `scale(${scale})`,
+          filter: `drop-shadow(0 3px ${Math.max(3, size * 0.06)}px rgba(0,0,0,0.4))`,
+        }}
+        draggable={false}
+      />
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════
    PetSprite — the main sprite component
+   Used in: menu badge, battle, encounter, detail, codex mini
    ═══════════════════════════════════════════ */
 export default function PetSprite({
   pet,
@@ -82,18 +134,7 @@ export default function PetSprite({
   return (
     <div className={animClass} style={{ width: size, height: size, position: 'relative' }}>
       {imgSrc ? (
-        <img
-          src={imgSrc}
-          alt={pet.name}
-          style={{
-            width: size,
-            height: size,
-            objectFit: 'contain',
-            filter: `drop-shadow(0 4px ${Math.max(6, size * 0.1)}px rgba(0,0,0,0.5))`,
-            borderRadius: size * 0.1,
-          }}
-          draggable={false}
-        />
+        <StarterSprite src={imgSrc} name={pet.name} size={size} />
       ) : (
         <EmojiSprite pet={pet} size={size} />
       )}
@@ -141,10 +182,18 @@ export function PetCard({
   const h = size * 1.4;
   const imgSrc = STARTER_IMAGES[pet.name];
 
+  const frameH = h * 0.44;
+  const spriteSize = Math.round(frameH * 0.78);
+
+  const shineClass =
+    pet.rarity === 'legendary' ? 'shine-legendary' :
+    pet.rarity === 'epic' ? 'shine-epic' :
+    pet.rarity === 'rare' ? 'shine-rare' : '';
+
   return (
     <div
       onClick={onClick}
-      className={`relative cursor-pointer transition-all active:scale-[0.96] hover:scale-[1.02] ${
+      className={`relative cursor-pointer transition-all active:scale-[0.96] hover:scale-[1.02] ${shineClass} ${
         selected ? 'scale-[1.03]' : ''
       }`}
       style={{
@@ -172,24 +221,24 @@ export function PetCard({
       <div
         className="mx-2 relative rounded-lg overflow-hidden"
         style={{
-          height: h * 0.44,
+          height: frameH,
           border: `2px solid ${bdr}50`,
           background: ELEM_BG[pet.element],
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
       >
-        {/* glow */}
+        {/* glow behind pet */}
         <div style={{
           position: 'absolute',
-          width: '65%', height: '65%', borderRadius: '50%',
+          width: '60%', height: '60%', borderRadius: '50%',
           background: `radial-gradient(circle, ${pet.colors.primary}30, transparent)`,
           filter: 'blur(16px)',
         }} />
 
-        {/* pet sprite */}
+        {/* pet sprite — standardized square container */}
         <div className="anim-generic-idle" style={{
           position: 'relative', zIndex: 2,
-          width: h * 0.38, height: h * 0.38,
+          width: spriteSize, height: spriteSize,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           {imgSrc ? (
@@ -197,15 +246,17 @@ export function PetCard({
               src={imgSrc}
               alt={pet.name}
               style={{
-                width: '100%', height: '100%',
+                width: spriteSize,
+                height: spriteSize,
                 objectFit: 'contain',
-                filter: `drop-shadow(0 5px 12px ${pet.colors.primary}50)`,
-                borderRadius: 8,
+                objectPosition: 'center center',
+                transform: `scale(${PET_SCALE[pet.name] ?? 1.0})`,
+                filter: `drop-shadow(0 4px 10px ${pet.colors.primary}50)`,
               }}
               draggable={false}
             />
           ) : (
-            <PetSprite pet={pet} size={h * 0.34} animate={false} showParticles={false} />
+            <PetSprite pet={pet} size={Math.round(spriteSize * 0.85)} animate={false} showParticles={false} />
           )}
         </div>
 

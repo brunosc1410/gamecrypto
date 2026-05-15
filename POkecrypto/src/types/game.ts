@@ -63,6 +63,7 @@ export interface BattleState {
 
 export interface ExploreState {
   isExploring: boolean;
+  searching: boolean;
   currentZone: MapZone;
   avatarX: number;
   avatarY: number;

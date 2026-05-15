@@ -3,12 +3,13 @@ import { ZONES } from '../data/pets';
 import PlayerAvatar from './PlayerAvatar';
 import { AVATAR_CLASSES } from '../data/avatars';
 import ActivePetBadge from './ActivePetBadge';
+import { CoinIcon, GemIcon, CryptoBallIcon } from './PixelIcons';
 
 export default function MainMenu() {
   const {
     setScreen, playerName, playerGender, playerClass,
     addStarterPets, pets, coins, gems, totalBattles,
-    startExploring, selectedPetId, cryptoBalls, totalCaptures, isVip,
+    startExploring, stopExploring, selectedPetId, cryptoBalls, totalCaptures, isVip, explore,
   } = useGameStore();
 
   const cls = AVATAR_CLASSES.find((a) => a.class === playerClass);
@@ -17,7 +18,7 @@ export default function MainMenu() {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0b0b20' }}>
       <div style={{ flex: 1, overflowY: 'auto' }}>
-        <div style={{ padding: '40px 28px 48px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ padding: '24px 28px 48px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           {/* Logo */}
           <div style={{ textAlign: 'center' }}>
             <h1 style={{ color: '#facc15', fontSize: 22, fontWeight: 900, fontFamily: "'Press Start 2P', system-ui", textShadow: '0 0 20px rgba(250,204,21,0.3)' }}>
@@ -68,15 +69,15 @@ export default function MainMenu() {
           {pets.length > 0 && (
             <div style={{ width: '100%', marginTop: 20, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {[
-                { e: '💰', v: coins, c: '#eab308' },
-                { e: '💎', v: gems, c: '#a855f7' },
-                { e: '🔮', v: cryptoBalls, c: '#06b6d4' },
-                { e: '🐾', v: pets.length, c: '#22c55e' },
-                { e: '⚔️', v: totalBattles, c: '#ef4444' },
-                { e: '✨', v: totalCaptures, c: '#ec4899' },
+                { icon: <CoinIcon size={16} />, v: coins, c: '#eab308' },
+                { icon: <GemIcon size={16} />, v: gems, c: '#a855f7' },
+                { icon: <CryptoBallIcon size={16} />, v: cryptoBalls, c: '#06b6d4' },
+                { icon: null, e: '🐾', v: pets.length, c: '#22c55e' },
+                { icon: null, e: '⚔️', v: totalBattles, c: '#ef4444' },
+                { icon: null, e: '✨', v: totalCaptures, c: '#ec4899' },
               ].map((s, i) => (
-                <div key={i} style={{ ...card, padding: '10px 4px', textAlign: 'center', color: s.c, fontSize: 13, fontWeight: 700 }}>
-                  {s.e} {s.v}
+                <div key={i} style={{ ...card, padding: '10px 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, color: s.c, fontSize: 13, fontWeight: 700 }}>
+                  {s.icon ?? <span>{s.e}</span>} {s.v}
                 </div>
               ))}
             </div>
@@ -96,7 +97,86 @@ export default function MainMenu() {
             <>
               {/* Explore */}
               <div style={{ ...card, width: '100%', marginTop: 24, padding: 20 }}>
-                <p style={{ textAlign: 'center', color: '#eab308', fontWeight: 700, fontSize: 14, marginBottom: 16 }}>🗺️ Explorar Mapa</p>
+                <p style={{ textAlign: 'center', color: '#eab308', fontWeight: 700, fontSize: 14, marginBottom: explore.isExploring ? 10 : 16 }}>🗺️ Explorar Mapa</p>
+
+                {explore.isExploring && (
+                  <div
+                    style={{
+                      width: '100%',
+                      marginBottom: 14,
+                      padding: '12px 14px',
+                      borderRadius: 14,
+                      border: '1px solid rgba(34,211,238,0.28)',
+                      background: 'linear-gradient(135deg, rgba(6,182,212,0.18), rgba(34,211,238,0.08))',
+                      color: '#67e8f9',
+                      boxShadow: '0 0 18px rgba(34,211,238,0.08)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: 999,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'rgba(255,255,255,0.06)',
+                          fontSize: 14,
+                        }}>🧭</div>
+                        <div style={{ textAlign: 'left' }}>
+                          <p style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.1 }}>Exploração em andamento</p>
+                          <p style={{ fontSize: 8, color: '#a5f3fc', opacity: 0.85, marginTop: 2, lineHeight: 1.1 }}>
+                            Continue ou encerre sua sessão atual
+                          </p>
+                        </div>
+                      </div>
+                      <div style={{
+                        padding: '4px 8px',
+                        borderRadius: 999,
+                        background: 'rgba(16,185,129,0.16)',
+                        border: '1px solid rgba(16,185,129,0.25)',
+                        color: '#6ee7b7',
+                        fontSize: 8,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}>ATIVO</div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <button
+                        onClick={() => setScreen('explore')}
+                        className="active:scale-[0.98] transition-transform"
+                        style={{
+                          padding: '10px 12px',
+                          borderRadius: 12,
+                          border: '1px solid rgba(34,211,238,0.22)',
+                          background: 'rgba(255,255,255,0.06)',
+                          color: '#67e8f9',
+                          cursor: 'pointer',
+                          fontSize: 10,
+                          fontWeight: 700,
+                        }}
+                      >← Voltar ao mapa</button>
+
+                      <button
+                        onClick={() => stopExploring()}
+                        className="active:scale-[0.98] transition-transform"
+                        style={{
+                          padding: '10px 12px',
+                          borderRadius: 12,
+                          border: '1px solid rgba(248,113,113,0.22)',
+                          background: 'rgba(127,29,29,0.18)',
+                          color: '#fca5a5',
+                          cursor: 'pointer',
+                          fontSize: 10,
+                          fontWeight: 700,
+                        }}
+                      >✕ Fechar exploração</button>
+                    </div>
+                  </div>
+                )}
+
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                   {ZONES.map((z) => (
                     <button

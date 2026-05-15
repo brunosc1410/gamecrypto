@@ -6,7 +6,6 @@ import PetDetail from './PetDetail';
 import ActivePetBadge from './ActivePetBadge';
 
 const RARITY_ORDER: Record<string, number> = { legendary: 4, epic: 3, rare: 2, common: 1 };
-
 function petPower(p: Pet) {
   return p.stats.maxHp + p.stats.attack * 2 + p.stats.defense * 1.5 + p.stats.speed * 1.2 + p.stats.level * 10;
 }
@@ -40,12 +39,10 @@ export default function Collection() {
   const [filterElement, setFilterElement] = useState<FilterElement>('all');
   const selectedPet = pets.find((p) => p.id === selectedPetId);
 
-  // Filter
   let filtered = [...pets];
   if (filterRarity !== 'all') filtered = filtered.filter(p => p.rarity === filterRarity);
   if (filterElement !== 'all') filtered = filtered.filter(p => p.element === filterElement);
 
-  // Sort: selected first, then by power (strongest first)
   filtered.sort((a, b) => {
     if (a.id === selectedPetId) return -1;
     if (b.id === selectedPetId) return 1;
@@ -95,7 +92,6 @@ export default function Collection() {
 
       {/* Filters */}
       <div style={{ padding: '10px 24px 6px 24px', flexShrink: 0 }}>
-        {/* Rarity filter */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
           {RARITY_FILTERS.map(f => {
             const active = filterRarity === f.key;
@@ -109,7 +105,6 @@ export default function Collection() {
             );
           })}
         </div>
-        {/* Element filter */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 5 }}>
           {ELEMENT_FILTERS.map(f => {
             const active = filterElement === f.key;
@@ -125,9 +120,8 @@ export default function Collection() {
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' } as React.CSSProperties}>
-        <style>{`.collection-scroll::-webkit-scrollbar{display:none}`}</style>
-        <div className="collection-scroll" style={{ padding: '16px 28px 28px 28px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+        <div style={{ padding: '16px 28px 28px 28px' }}>
           <p style={{ color: '#6b7280', fontSize: 12, textAlign: 'center', marginBottom: 14 }}>
             {filtered.length} de {pets.length} pets
           </p>
@@ -137,9 +131,8 @@ export default function Collection() {
             ))}
           </div>
           {filtered.length === 0 && (
-            <p style={{ color: '#4b5563', fontSize: 14, textAlign: 'center', marginTop: 40 }}>Nenhum pet encontrado com esse filtro.</p>
+            <p style={{ color: '#4b5563', fontSize: 14, textAlign: 'center', marginTop: 40 }}>Nenhum pet encontrado.</p>
           )}
-          <div style={{ height: 28 }} />
         </div>
       </div>
 
@@ -148,29 +141,24 @@ export default function Collection() {
         <div style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.62)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ width: '100%', maxWidth: 300, background: '#111128', border: '1px solid #252550', borderRadius: 20, padding: 20, textAlign: 'center' }}>
             <p style={{ color: 'white', fontWeight: 700, fontSize: 16, marginBottom: 8 }}>{actionPet.name}</p>
-            <p style={{ color: '#9ca3af', fontSize: 12, marginBottom: 16 }}>O que deseja fazer com este pet?</p>
+            <p style={{ color: '#9ca3af', fontSize: 12, marginBottom: 16 }}>O que deseja fazer?</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <button onClick={() => handleViewPet(actionPet)} className="active:scale-95 transition-transform" style={{ padding: '12px 0', background: 'linear-gradient(90deg,#16a34a,#22c55e)', border: 'none', borderRadius: 12, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>👁️ Ver</button>
-              <button onClick={() => handleSetActive(actionPet)} className="active:scale-95 transition-transform" style={{ padding: '12px 0', background: 'linear-gradient(90deg,#b91c1c,#dc2626)', border: 'none', borderRadius: 12, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>⭐ Selecionar</button>
+              <button onClick={() => handleViewPet(actionPet)} className="active:scale-95 transition-transform" style={{
+                padding: '12px 0', background: 'linear-gradient(90deg,#16a34a,#22c55e)',
+                border: 'none', borderRadius: 12, color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+              }}>📊 Detalhes</button>
+              <button onClick={() => handleSetActive(actionPet)} className="active:scale-95 transition-transform" style={{
+                padding: '12px 0', background: actionPet.id === selectedPetId ? '#374151' : 'linear-gradient(90deg,#eab308,#f59e0b)',
+                border: 'none', borderRadius: 12, color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+              }}>{actionPet.id === selectedPetId ? '✓ Ativo' : '⭐ Ativar'}</button>
             </div>
-            <button onClick={() => setActionPet(null)} className="active:scale-95 transition-transform" style={{ marginTop: 12, width: '100%', padding: '10px 0', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, color: '#9ca3af', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancelar</button>
+            <button onClick={() => setActionPet(null)} style={{
+              marginTop: 12, padding: '10px 0', width: '100%', background: 'none',
+              border: '1px solid #374151', borderRadius: 12, color: '#9ca3af', fontSize: 12, cursor: 'pointer',
+            }}>Cancelar</button>
           </div>
         </div>
       )}
-
-      {/* Bottom nav */}
-      <div style={{ flexShrink: 0, background: '#111128', borderTop: '1px solid #252550', padding: '14px 24px 16px 24px', display: 'flex', justifyContent: 'center', gap: 8, boxShadow: '0 -10px 24px rgba(0,0,0,0.28)' }}>
-        {[
-          { l: '🗺️ Explorar', bg: 'linear-gradient(90deg,#16a34a,#22c55e)', s: 'menu' as const },
-          { l: '📕 Codex', bg: 'linear-gradient(90deg,#b91c1c,#dc2626)', s: 'codex' as const },
-          { l: '🛒 Loja', bg: 'linear-gradient(90deg,#7c3aed,#8b5cf6)', s: 'shop' as const },
-        ].map((b, i) => (
-          <button key={i} onClick={() => setScreen(b.s)} style={{
-            padding: '10px 14px', background: b.bg, border: 'none', borderRadius: 10, color: 'white',
-            fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: "'Press Start 2P', system-ui", lineHeight: 1.2,
-          }} className="active:scale-95 transition-transform">{b.l}</button>
-        ))}
-      </div>
     </div>
   );
 }

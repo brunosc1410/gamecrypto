@@ -29,8 +29,6 @@ export default function Codex() {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0b0b20' }}>
-      <style>{`.cdx-scroll::-webkit-scrollbar{display:none}`}</style>
-
       {/* Header */}
       <div style={{ padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: '#111128', borderBottom: '1px solid #252550' }}>
         <button onClick={() => setScreen('menu')} style={{ color: '#eab308', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>← Menu</button>
@@ -52,10 +50,10 @@ export default function Codex() {
         </div>
       </div>
 
-      {/* Filters — row of small buttons, NO horizontal scroll */}
+      {/* Filters */}
       <div style={{ padding: '10px 24px', display: 'flex', justifyContent: 'center', gap: 6, flexShrink: 0, flexWrap: 'wrap' }}>
         {ELEMS.map(el => (
-          <button key={el.key} onClick={() => setFilter(el.key)} style={{
+          <button key={el.key} onClick={() => { setSel(null); setFilter(el.key); }} style={{
             padding: '7px 10px', borderRadius: 8, fontSize: 16, cursor: 'pointer',
             background: filter === el.key ? 'rgba(185,28,28,0.3)' : '#111128',
             border: filter === el.key ? '2px solid rgba(239,68,68,0.5)' : '1px solid #252550',
@@ -66,39 +64,37 @@ export default function Codex() {
         ))}
       </div>
 
-      {/* Grid — hidden scrollbar, drag to scroll */}
-      <div className="cdx-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' } as React.CSSProperties}>
+      {/* Grid */}
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         <div style={{ padding: '12px 24px 28px 24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
             {filtered.map((e, i) => {
               const seen = seenSet.has(e.name);
               const owned = ownedNames.has(e.name);
               const idx = ALL_PETS.indexOf(e) + 1;
-              const isSel = sel === e.name;
+              const isSel2 = sel === e.name;
 
               return (
                 <button key={`${e.name}-${i}`} onClick={() => setSel(e.name)} style={{
                   position: 'relative', borderRadius: 14, padding: '10px 8px 8px 8px',
-                  border: isSel ? '2px solid rgba(248,113,113,0.5)' : owned ? '2px solid rgba(34,197,94,0.2)' : '2px solid rgba(255,255,255,0.06)',
-                  background: isSel ? 'rgba(127,29,29,0.15)' : owned ? 'rgba(20,83,45,0.1)' : 'rgba(255,255,255,0.02)',
+                  border: isSel2 ? '2px solid rgba(248,113,113,0.5)' : owned ? '2px solid rgba(34,197,94,0.2)' : '2px solid rgba(255,255,255,0.06)',
+                  background: isSel2 ? 'rgba(127,29,29,0.15)' : owned ? 'rgba(20,83,45,0.1)' : 'rgba(255,255,255,0.02)',
                   cursor: 'pointer', display: 'flex', flexDirection: 'column' as const, alignItems: 'center',
                 }} className="active:scale-95 transition-transform">
                   <span style={{ position: 'absolute', top: 5, left: 7, fontSize: 8, fontWeight: 700, color: '#6b7280' }}>#{String(idx).padStart(3, '0')}</span>
                   {owned && <span style={{ position: 'absolute', top: 4, right: 6, color: '#22c55e', fontSize: 12, fontWeight: 700 }}>✓</span>}
-
                   <div style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
                     {seen || owned ? (
                       <div style={{ width: 48, height: 48, filter: !owned ? 'grayscale(0.7) brightness(0.5)' : undefined }}>
                         <PetSprite pet={{ ...e, id: 'cx' } as Pet} size={48} animate={owned} showParticles={false} />
                       </div>
                     ) : (
-                      <span style={{ fontSize: 22, opacity: 0.12 }}>❓</span>
+                      <span style={{ fontSize: 28, opacity: 0.3 }}>❓</span>
                     )}
                   </div>
-
-                  <p style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, marginTop: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', color: owned ? 'white' : seen ? '#9ca3af' : '#4b5563' }}>
+                  <span style={{ fontSize: 8, color: seen || owned ? '#d1d5db' : '#4b5563', marginTop: 4, fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}>
                     {seen || owned ? e.name : '???'}
-                  </p>
+                  </span>
                 </button>
               );
             })}
@@ -106,73 +102,50 @@ export default function Codex() {
         </div>
       </div>
 
-      {/* Detail panel — vertical layout, well spaced */}
+      {/* Detail panel */}
       {entry && (
-        <div style={{ flexShrink: 0, background: '#111128', borderTop: '1px solid #252550', padding: '20px 28px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20 }}>
-            {/* Sprite */}
-            <div style={{ flexShrink: 0 }}>
-              {isSeen || isOwned ? (
-                <div style={{
-                  width: 72, height: 72,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'rgba(255,255,255,0.03)', borderRadius: 14,
-                  filter: !isOwned ? 'grayscale(0.7) brightness(0.5)' : undefined,
-                }}>
-                  <PetSprite pet={{ ...entry, id: 'd' } as Pet} size={56} animate={isOwned} showParticles={false} />
-                </div>
-              ) : (
-                <div style={{ width: 72, height: 72, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: 14 }}>
-                  <span style={{ fontSize: 28, opacity: 0.1 }}>❓</span>
-                </div>
-              )}
-            </div>
-
-            {/* Info */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {/* Name + element */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ color: 'white', fontWeight: 700, fontSize: 16 }}>{isSeen || isOwned ? entry.name : '???'}</span>
-                <span style={{ fontSize: 18 }}>{ELEMENT_EMOJIS[entry.element]}</span>
+        <div style={{
+          flexShrink: 0, padding: '16px 24px', background: '#111128', borderTop: '1px solid #252550',
+          display: 'flex', gap: 16, alignItems: 'center',
+        }}>
+          <div style={{ width: 60, height: 60, flexShrink: 0 }}>
+            {isSeen || isOwned ? (
+              <PetSprite pet={{ ...entry, id: 'detail' } as Pet} size={60} animate={isOwned} showParticles={false} />
+            ) : (
+              <div style={{ width: 60, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 36, opacity: 0.3 }}>❓</span>
               </div>
-
-              {(isSeen || isOwned) ? (
-                <>
-                  {/* Rarity + status */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 8,
-                      color: RARITY_COLORS[entry.rarity],
-                      background: RARITY_COLORS[entry.rarity] + '18',
-                      border: `1px solid ${RARITY_COLORS[entry.rarity]}30`,
-                    }}>{entry.rarity.toUpperCase()}</span>
-                    {isOwned && <span style={{ color: '#22c55e', fontSize: 11, fontWeight: 700 }}>✓ Capturado</span>}
-                    {isSeen && !isOwned && <span style={{ color: '#9ca3af', fontSize: 11 }}>👁 Visto</span>}
-                  </div>
-
-                  {/* Stats — 2x2 grid */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
-                    {[
-                      { l: 'HP', v: entry.stats.maxHp, c: '#f87171', e: '❤️' },
-                      { l: 'ATK', v: entry.stats.attack, c: '#fb923c', e: '⚔️' },
-                      { l: 'DEF', v: entry.stats.defense, c: '#60a5fa', e: '🛡️' },
-                      { l: 'SPD', v: entry.stats.speed, c: '#facc15', e: '💨' },
-                    ].map((s, i) => (
-                      <div key={i} style={{
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '6px 10px',
-                      }}>
-                        <span style={{ fontSize: 12 }}>{s.e}</span>
-                        <span style={{ color: '#9ca3af', fontSize: 10, fontWeight: 600 }}>{s.l}</span>
-                        <span style={{ color: s.c, fontSize: 12, fontWeight: 700, marginLeft: 'auto' }}>{s.v}</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <p style={{ color: '#6b7280', fontSize: 12, marginTop: 8 }}>Explore os mapas para encontrar!</p>
-              )}
-            </div>
+            )}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>
+              {isSeen || isOwned ? entry.name : '???'} {ELEMENT_EMOJIS[entry.element]}
+            </p>
+            {(isSeen || isOwned) ? (
+              <>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
+                  <span style={{ color: RARITY_COLORS[entry.rarity], fontSize: 10, fontWeight: 700 }}>{entry.rarity.toUpperCase()}</span>
+                  {isOwned && <span style={{ color: '#22c55e', fontSize: 9 }}>✓ Capturado</span>}
+                  {isSeen && !isOwned && <span style={{ color: '#6b7280', fontSize: 9 }}>👁 Visto</span>}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, marginTop: 6 }}>
+                  {[
+                    { l: 'HP', v: entry.stats.maxHp, c: '#f87171', e: '❤️' },
+                    { l: 'ATK', v: entry.stats.attack, c: '#fb923c', e: '⚔️' },
+                    { l: 'DEF', v: entry.stats.defense, c: '#60a5fa', e: '🛡️' },
+                    { l: 'SPD', v: entry.stats.speed, c: '#facc15', e: '💨' },
+                  ].map((s, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ fontSize: 10 }}>{s.e}</span>
+                      <span style={{ color: '#6b7280', fontSize: 9 }}>{s.l}</span>
+                      <span style={{ color: s.c, fontSize: 10, fontWeight: 700 }}>{s.v}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p style={{ color: '#4b5563', fontSize: 11, marginTop: 4 }}>Explore os mapas para encontrar!</p>
+            )}
           </div>
         </div>
       )}

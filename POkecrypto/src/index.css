@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-/* build-bust: v2 */
-
 /* ===== FONTS ===== */
 .game-font {
   font-family: 'Press Start 2P', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', system-ui, sans-serif;
@@ -60,7 +58,6 @@
 }
 .anim-bounce { animation: bounce-slow 2s ease-in-out infinite; }
 
-/* Battle */
 @keyframes idle-bounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
@@ -114,7 +111,6 @@
 }
 .animate-damage-float { animation: damage-up 0.8s ease-out forwards; }
 
-/* Encounter */
 @keyframes encounter-flash {
   0%   { opacity: 0; }
   10%  { opacity: 1; }
@@ -177,11 +173,7 @@
 }
 .animate-fade-in { animation: fade-in 0.35s ease-out; }
 
-/* ===== PET SPRITE ANIMATIONS ===== */
-
-/* --- PER-STARTER MOVEMENT --- */
-
-/* 🔥 Flamarion: fiery sway, body rocks like a flame */
+/* PET SPRITE ANIMATIONS */
 @keyframes fire-sway {
   0%   { transform: translateY(0) rotate(0deg) scale(1); }
   15%  { transform: translateY(-5px) rotate(2deg) scale(1.03); }
@@ -192,7 +184,6 @@
 }
 .anim-fire-sway { animation: fire-sway 2s ease-in-out infinite; }
 
-/* 💧 Aqualis: gentle swim, side-to-side undulation */
 @keyframes water-swim {
   0%   { transform: translateX(0) translateY(0) rotate(0deg); }
   25%  { transform: translateX(6px) translateY(-4px) rotate(2deg); }
@@ -202,7 +193,6 @@
 }
 .anim-water-swim { animation: water-swim 3s ease-in-out infinite; }
 
-/* 🌿 Verdex: leaf rustle, slight lean with bounce */
 @keyframes grass-rustle {
   0%   { transform: translateY(0) rotate(0deg) scaleX(1); }
   20%  { transform: translateY(-3px) rotate(-3deg) scaleX(1.02); }
@@ -213,7 +203,6 @@
 }
 .anim-grass-rustle { animation: grass-rustle 2.8s ease-in-out infinite; }
 
-/* ⚡ Voltix: jittery electric buzz, twitchy */
 @keyframes electric-jitter {
   0%   { transform: translate(0, 0) scale(1); }
   5%   { transform: translate(-2px, -1px) scale(1.01); }
@@ -229,159 +218,29 @@
   90%  { transform: translate(1px, -2px) scale(1.01); }
   100% { transform: translate(0, 0) scale(1); }
 }
-.anim-electric-jitter { animation: electric-jitter 1.8s linear infinite; }
+.anim-electric-jitter { animation: electric-jitter 1.2s ease-in-out infinite; }
 
-/* 🌑 Umbrix: shadow pulse, fades in/out with drift */
 @keyframes dark-pulse {
-  0%   { transform: translateY(0) scale(1); opacity: 1; filter: brightness(1); }
-  25%  { transform: translateY(-4px) scale(1.04); opacity: 0.85; filter: brightness(0.9); }
-  50%  { transform: translateY(-8px) scale(1.06); opacity: 0.7; filter: brightness(0.8); }
-  75%  { transform: translateY(-4px) scale(1.03); opacity: 0.9; filter: brightness(0.95); }
-  100% { transform: translateY(0) scale(1); opacity: 1; filter: brightness(1); }
+  0%   { transform: scale(1); filter: brightness(1); }
+  25%  { transform: scale(1.03) translateY(-3px); filter: brightness(1.15); }
+  50%  { transform: scale(0.98) translateY(-5px); filter: brightness(0.9); }
+  75%  { transform: scale(1.02) translateY(-2px); filter: brightness(1.1); }
+  100% { transform: scale(1); filter: brightness(1); }
 }
-.anim-dark-pulse { animation: dark-pulse 3s ease-in-out infinite; }
+.anim-dark-pulse { animation: dark-pulse 2.5s ease-in-out infinite; }
 
-/* ❄️ Glacius: slow crystalline breathe, gentle sway */
-@keyframes ice-breathe {
-  0%   { transform: translateY(0) scaleY(1) scaleX(1); }
-  30%  { transform: translateY(-4px) scaleY(1.03) scaleX(0.98); }
-  50%  { transform: translateY(-7px) scaleY(1.05) scaleX(0.97); }
-  70%  { transform: translateY(-3px) scaleY(1.02) scaleX(0.99); }
-  100% { transform: translateY(0) scaleY(1) scaleX(1); }
+@keyframes ice-shimmer {
+  0%   { transform: translateY(0) scale(1); filter: brightness(1); }
+  20%  { transform: translateY(-4px) scale(1.01); filter: brightness(1.1); }
+  40%  { transform: translateY(-2px) scale(0.99); filter: brightness(1.05); }
+  60%  { transform: translateY(-6px) scale(1.02); filter: brightness(1.15); }
+  80%  { transform: translateY(-3px) scale(1); filter: brightness(1.05); }
+  100% { transform: translateY(0) scale(1); filter: brightness(1); }
 }
-.anim-ice-breathe { animation: ice-breathe 3.5s ease-in-out infinite; }
+.anim-ice-shimmer { animation: ice-shimmer 3s ease-in-out infinite; }
 
-/* Generic idle for non-starters */
 @keyframes generic-idle {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  50% { transform: translateY(-6px); }
 }
-.anim-generic-idle { animation: generic-idle 2.5s ease-in-out infinite; }
-
-/* --- PARTICLE ANIMATIONS --- */
-
-/* 🔥 Fire embers rising */
-@keyframes fire-ember {
-  0%   { transform: translateY(0) scale(1); opacity: 0.9; }
-  30%  { transform: translateY(-18px) translateX(4px) scale(0.8); opacity: 0.7; }
-  60%  { transform: translateY(-35px) translateX(-2px) scale(0.5); opacity: 0.4; }
-  100% { transform: translateY(-50px) translateX(3px) scale(0.1); opacity: 0; }
-}
-.anim-fire-ember { animation: fire-ember 1.2s ease-out infinite; }
-
-/* 💧 Water drops rising */
-@keyframes water-drop {
-  0%   { transform: translateY(0) scale(0.4); opacity: 0; }
-  15%  { opacity: 0.7; transform: scale(0.8); }
-  100% { transform: translateY(-55px) translateX(6px) scale(1.1); opacity: 0; }
-}
-.anim-water-drop { animation: water-drop 2.5s ease-in-out infinite; }
-
-/* 💧 Water reflection pulse */
-@keyframes water-ref {
-  0%, 100% { transform: scaleX(1); opacity: 0.3; }
-  50% { transform: scaleX(1.3); opacity: 0.5; }
-}
-.anim-water-reflection { animation: water-ref 2s ease-in-out infinite; }
-
-/* 🌿 Leaves floating */
-@keyframes leaf-float {
-  0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.7; }
-  25%  { transform: translateY(8px) translateX(8px) rotate(90deg); opacity: 0.6; }
-  50%  { transform: translateY(18px) translateX(4px) rotate(180deg); opacity: 0.4; }
-  75%  { transform: translateY(28px) translateX(-4px) rotate(270deg); opacity: 0.2; }
-  100% { transform: translateY(40px) translateX(-8px) rotate(360deg); opacity: 0; }
-}
-.anim-leaf-float { animation: leaf-float 4s ease-in-out infinite; }
-
-/* 🌿 Pollen sparkle */
-@keyframes pollen {
-  0%, 100% { opacity: 0; transform: scale(0.5); }
-  50% { opacity: 0.7; transform: scale(1.5); }
-}
-.anim-pollen { animation: pollen 2s ease-in-out infinite; }
-
-/* ⚡ Zap flash */
-@keyframes zap {
-  0%   { opacity: 0; transform: scale(0.3) rotate(-10deg); }
-  15%  { opacity: 1; transform: scale(1.3) rotate(5deg); }
-  30%  { opacity: 0; transform: scale(0.8) rotate(0deg); }
-  100% { opacity: 0; }
-}
-.anim-zap { animation: zap 1s ease-in-out infinite; }
-
-/* ⚡ Crackle lines */
-@keyframes crackle {
-  0%, 100% { opacity: 0.15; }
-  50% { opacity: 0.4; }
-}
-.anim-crackle { animation: crackle 0.8s ease-in-out infinite; }
-
-/* 🌑 Shadow orbs drift */
-@keyframes shadow-orb {
-  0%   { transform: translate(0, 0) scale(1); opacity: 0.4; }
-  33%  { transform: translate(5px, -8px) scale(1.4); opacity: 0.2; }
-  66%  { transform: translate(-4px, 4px) scale(0.7); opacity: 0.5; }
-  100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
-}
-.anim-shadow-orb { animation: shadow-orb 3.5s ease-in-out infinite; }
-
-/* 🌑 Dark mist */
-@keyframes dark-mist {
-  0%, 100% { opacity: 0.3; transform: translateX(0); }
-  50% { opacity: 0.6; transform: translateX(5px); }
-}
-.anim-dark-mist { animation: dark-mist 4s ease-in-out infinite; }
-
-/* ❄️ Snowflakes falling */
-@keyframes snow {
-  0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.6; }
-  100% { transform: translateY(80px) translateX(8px) rotate(360deg); opacity: 0; }
-}
-.anim-snow { animation: snow 3s linear infinite; }
-
-/* ❄️ Frost shimmer */
-@keyframes frost-shimmer {
-  0%   { background-position: -100% 0; }
-  100% { background-position: 200% 0; }
-}
-.anim-frost-shimmer {
-  animation: frost-shimmer 4s linear infinite;
-  background-size: 200% 100%;
-}
-
-/* Holographic card shine for rare+ cards */
-@keyframes holo-shine {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-.anim-holo-shine { animation: holo-shine 4s ease-in-out infinite; background-size: 200% 100%; }
-
-/* ===== BASE ===== */
-* {
-  margin: 0; padding: 0; box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-html {
-  height: 100%;
-  overscroll-behavior: none;
-}
-body {
-  background: #050510; color: white;
-  font-family: system-ui, -apple-system, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
-  height: 100%;
-  touch-action: manipulation;
-  overscroll-behavior: none;
-  font-size: 16px;
-  overflow: hidden;
-}
-#root {
-  height: 100dvh;
-}
-::selection {
-  background: #eab308; color: #0a0a2e;
-}
-input[type="color"] { -webkit-appearance: none; border: none; padding: 0; }
-input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-input[type="color"]::-webkit-color-swatch { border: 1px solid #666; border-radius: 4px; }
-.touch-none { touch-action: none; }
+.anim-generic-idle { animation: generic-idle 2s ease-in-out infinite; }

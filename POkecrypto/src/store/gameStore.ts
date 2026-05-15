@@ -27,10 +27,10 @@ interface GameState {
   totalBattles: number;
   totalCaptures: number;
   cryptoBalls: number;
-  exploreSpeed: number; // 1, 2, or 3
+  exploreSpeed: number;
   encounterMode: 'manual' | 'auto-battle' | 'auto-capture' | 'auto-flee';
   isVip: boolean;
-  seenPets: string[];   // names of pets seen in encounters
+  seenPets: string[];
   walletConnected: boolean;
   walletAddress: string | null;
 
@@ -57,7 +57,6 @@ interface GameState {
   clearEncounter: () => void;
   stopExploring: () => void;
   clearBattleAnimation: () => void;
-  // Encounter actions
   startEncounter: (wildPet: Pet) => void;
   throwBall: () => void;
   setEncounterPhase: (phase: EncounterState['phase']) => void;
@@ -67,9 +66,7 @@ interface GameState {
 }
 
 let idCounter = 0;
-function genId() {
-  return `pet-${Date.now()}-${idCounter++}`;
-}
+function genId() { return `pet-${Date.now()}-${idCounter++}`; }
 
 function addLog(logs: BattleLog[], message: string, type: BattleLog['type']): BattleLog[] {
   return [
@@ -79,23 +76,40 @@ function addLog(logs: BattleLog[], message: string, type: BattleLog['type']): Ba
 }
 
 const defaultBattle: BattleState = {
-  isActive: false, playerPet: null, enemyPet: null,
-  playerCurrentHp: 0, enemyCurrentHp: 0, logs: [], turn: 0,
-  winner: null, isAutoPlaying: true, battleSpeed: 2000,
+  isActive: false,
+  playerPet: null,
+  enemyPet: null,
+  playerCurrentHp: 0,
+  enemyCurrentHp: 0,
+  logs: [],
+  turn: 0,
+  winner: null,
+  isAutoPlaying: true,
+  battleSpeed: 2000,
   currentAnimation: { type: 'none', duration: 0 },
   showDamage: { player: null, enemy: null },
 };
 
 const defaultExplore: ExploreState = {
-  isExploring: false, currentZone: 'forest',
-  avatarX: 50, avatarY: 50, direction: 'down',
-  stepCount: 0, encounterPending: false, encounterFlash: false,
+  isExploring: false,
+  currentZone: 'forest',
+  avatarX: 50,
+  avatarY: 50,
+  direction: 'down',
+  stepCount: 0,
+  encounterPending: false,
+  encounterFlash: false,
 };
 
 const defaultEncounter: EncounterState = {
-  active: false, wildPet: null, phase: 'ready',
-  shakeCount: 0, ballsLeft: 0, catchChance: 0,
-  fleeChance: 0, attempts: 0,
+  active: false,
+  wildPet: null,
+  phase: 'ready',
+  shakeCount: 0,
+  ballsLeft: 0,
+  catchChance: 0,
+  fleeChance: 0,
+  attempts: 0,
 };
 
 export const useGameStore = create<GameState>()(
@@ -103,8 +117,8 @@ export const useGameStore = create<GameState>()(
     (set, get) => ({
       screen: 'menu',
       playerName: 'Treinador',
-      playerGender: 'male',
-      playerClass: 'warrior',
+      playerGender: 'male' as AvatarGender,
+      playerClass: 'warrior' as AvatarClass,
       coins: 500,
       inventory: { potionHp: 0, potionAtk: 0, potionDef: 0, potionSpd: 0, megaPack: 0 },
       gems: 10,
@@ -132,8 +146,11 @@ export const useGameStore = create<GameState>()(
         const state = get();
         if (state.pets.length > 0) return;
         const starterPets: Pet[] = STARTER_PETS.map((p) => ({
-          ...p, id: genId(),
-          colors: { ...p.colors }, defaultColors: { ...p.defaultColors }, stats: { ...p.stats },
+          ...p,
+          id: genId(),
+          colors: { ...p.colors },
+          defaultColors: { ...p.defaultColors },
+          stats: { ...p.stats },
         }));
         set({ pets: starterPets, selectedPetId: starterPets[0].id });
       },
@@ -144,7 +161,8 @@ export const useGameStore = create<GameState>()(
         set((s) => ({
           pets: s.pets.map((p) =>
             p.id !== petId ? p : {
-              ...p, colors: {
+              ...p,
+              colors: {
                 primary: colors.primary ?? p.colors.primary,
                 secondary: colors.secondary ?? p.colors.secondary,
                 accent: colors.accent ?? p.colors.accent,
@@ -168,22 +186,18 @@ export const useGameStore = create<GameState>()(
           pets: state.pets.map((p) => {
             if (p.id !== petId) return p;
             const ns = { ...p.stats };
-            if (stat === 'hp') { ns.hp += 10; ns.maxHp += 10; } else { ns[stat] += 5; }
+            if (stat === 'hp') { ns.hp += 10; ns.maxHp += 10; }
+            else { ns[stat] += 5; }
             return { ...p, stats: ns };
           }),
           coins: state.coins - cost,
         });
       },
 
-      // ===== ENCOUNTER =====
+      // ENCOUNTER
       startEncounter: (wildPet: Pet) => {
-        const rarityChance: Record<string, number> = {
-          common: 0.55, rare: 0.35, epic: 0.20, legendary: 0.10,
-        };
-        const fleeChance: Record<string, number> = {
-          common: 0.15, rare: 0.25, epic: 0.35, legendary: 0.50,
-        };
-        // Mark as seen in codex
+        const rarityChance: Record<string, number> = { common: 0.55, rare: 0.35, epic: 0.20, legendary: 0.10 };
+        const fleeChanceMap: Record<string, number> = { common: 0.15, rare: 0.25, epic: 0.35, legendary: 0.50 };
         const seen = get().seenPets;
         const newSeen = seen.includes(wildPet.name) ? seen : [...seen, wildPet.name];
         set({
@@ -195,7 +209,7 @@ export const useGameStore = create<GameState>()(
             shakeCount: 0,
             ballsLeft: get().cryptoBalls,
             catchChance: rarityChance[wildPet.rarity] ?? 0.4,
-            fleeChance: fleeChance[wildPet.rarity] ?? 0.2,
+            fleeChance: fleeChanceMap[wildPet.rarity] ?? 0.2,
             attempts: 0,
           },
           screen: 'encounter',
@@ -206,37 +220,32 @@ export const useGameStore = create<GameState>()(
       throwBall: () => {
         const state = get();
         if (state.cryptoBalls <= 0) return;
-        set({
-          cryptoBalls: state.cryptoBalls - 1,
+        set((s) => ({
+          cryptoBalls: s.cryptoBalls - 1,
           encounter: {
-            ...state.encounter,
+            ...s.encounter,
             phase: 'throwing',
             shakeCount: 0,
-            ballsLeft: state.cryptoBalls - 1,
-            attempts: state.encounter.attempts + 1,
+            attempts: s.encounter.attempts + 1,
+            ballsLeft: s.cryptoBalls - 1,
           },
-        });
+        }));
       },
 
       setEncounterPhase: (phase) => {
-        set((s) => ({
-          encounter: { ...s.encounter, phase },
-        }));
+        set((s) => ({ encounter: { ...s.encounter, phase } }));
       },
 
       resolveCapture: () => {
         const state = get();
         const enc = state.encounter;
         const roll = Math.random();
-        // Each shake is a partial check. After 3 shakes, final catch check
-        if (roll < enc.catchChance) {
-          // Caught!
+        const adjustedCatch = enc.catchChance - (enc.attempts * 0.03);
+        if (roll < adjustedCatch) {
           set((s) => ({ encounter: { ...s.encounter, phase: 'caught' } }));
           return 'caught';
         } else {
-          // Broke free - check if pet flees
           const fleeRoll = Math.random();
-          // Flee chance increases with each attempt
           const adjustedFlee = enc.fleeChance + (enc.attempts * 0.08);
           if (fleeRoll < adjustedFlee) {
             set((s) => ({ encounter: { ...s.encounter, phase: 'fled' } }));
@@ -251,15 +260,8 @@ export const useGameStore = create<GameState>()(
       finishEncounter: () => {
         const state = get();
         const enc = state.encounter;
-
         if (enc.phase === 'caught' && enc.wildPet) {
-          // Add pet to collection
-          const newPet: Pet = {
-            ...enc.wildPet,
-            id: genId(),
-            wins: 0, losses: 0,
-          };
-          // Reward based on rarity + level
+          const newPet: Pet = { ...enc.wildPet, id: genId(), wins: 0, losses: 0 };
           const rarityReward: Record<string, number> = { common: 30, rare: 80, epic: 200, legendary: 500 };
           const captureCoins = (rarityReward[enc.wildPet.rarity] ?? 30) + (enc.wildPet.stats.level * 10);
           set({
@@ -273,7 +275,6 @@ export const useGameStore = create<GameState>()(
               : state.explore,
           });
         } else {
-          // Fled or gave up
           set({
             encounter: { ...defaultEncounter },
             screen: state.explore.isExploring ? 'explore' : 'collection',
@@ -295,7 +296,7 @@ export const useGameStore = create<GameState>()(
         });
       },
 
-      // ===== BATTLE =====
+      // BATTLE
       startBattleFromEncounter: (enemy: Pet) => {
         const state = get();
         const playerPet = state.pets.find((p) => p.id === state.selectedPetId);
@@ -303,9 +304,15 @@ export const useGameStore = create<GameState>()(
         const logs = addLog([], `⚔️ Batalha contra ${enemy.name}!`, 'info');
         set({
           battle: {
-            isActive: true, playerPet: { ...playerPet }, enemyPet: enemy,
-            playerCurrentHp: playerPet.stats.hp, enemyCurrentHp: enemy.stats.hp,
-            logs, turn: 0, winner: null, isAutoPlaying: true,
+            isActive: true,
+            playerPet: { ...playerPet },
+            enemyPet: enemy,
+            playerCurrentHp: playerPet.stats.hp,
+            enemyCurrentHp: enemy.stats.hp,
+            logs,
+            turn: 0,
+            winner: null,
+            isAutoPlaying: true,
             battleSpeed: state.battle.battleSpeed,
             currentAnimation: { type: 'idle', duration: 0 },
             showDamage: { player: null, enemy: null },
@@ -327,22 +334,27 @@ export const useGameStore = create<GameState>()(
         const pPet = battle.playerPet;
         const ePet = battle.enemyPet;
         const playerFirst = pPet.stats.speed >= ePet.stats.speed;
-
         let pDmgShow: number | null = null;
         let eDmgShow: number | null = null;
 
         const calcDamage = (attacker: Pet, defender: Pet, defHp: number, isPlayer: boolean) => {
           const baseDamage = Math.max(1, attacker.stats.attack - defender.stats.defense * 0.5);
-          const isCritical = Math.random() < 0.15;
-          const isMiss = Math.random() < 0.1;
-          let elementBonus = 1;
-          if (ELEMENT_ADVANTAGE[attacker.element] === defender.element) elementBonus = 1.5;
-          if (isMiss) { logs = addLog(logs, `💨 ${attacker.name} errou!`, 'miss'); return defHp; }
-          let damage = Math.floor(baseDamage * (0.85 + Math.random() * 0.3) * elementBonus);
-          if (isCritical) { damage = Math.floor(damage * 1.8); logs = addLog(logs, `💥 CRÍTICO! ${attacker.name} → ${damage}!`, 'critical'); }
-          else { logs = addLog(logs, `⚔️ ${attacker.name} → ${damage} dano!`, 'attack'); }
-          if (elementBonus > 1) logs = addLog(logs, `✨ Super efetivo!`, 'info');
-          if (isPlayer) eDmgShow = damage; else pDmgShow = damage;
+          const isCritical = Math.random() < 0.12;
+          const advantage = ELEMENT_ADVANTAGE[attacker.element] === defender.element;
+          let mult = advantage ? 1.4 : 1;
+          if (isCritical) mult *= 1.6;
+          const variance = 0.85 + Math.random() * 0.3;
+          const damage = Math.max(1, Math.floor(baseDamage * mult * variance));
+
+          const who = isPlayer ? pPet.name : ePet.name;
+          if (isCritical) {
+            logs = addLog(logs, `💥 ${who} — CRÍTICO! -${damage}HP`, 'critical');
+          } else {
+            logs = addLog(logs, `${isPlayer ? '⚔️' : '🗡️'} ${who} ataca! -${damage}HP`, 'attack');
+          }
+          if (advantage && mult > 1) logs = addLog(logs, `✨ Super efetivo!`, 'info');
+          if (isPlayer) eDmgShow = damage;
+          else pDmgShow = damage;
           return Math.max(0, defHp - damage);
         };
 
@@ -356,23 +368,51 @@ export const useGameStore = create<GameState>()(
 
         let winner: 'player' | 'enemy' | null = null;
         let anim: BattleState['currentAnimation'] = { type: 'attack-player', duration: 400 };
-        if (enemyCurrentHp <= 0) { winner = 'player'; logs = addLog(logs, `🏆 ${pPet.name} venceu!`, 'win'); anim = { type: 'faint-enemy', duration: 800 }; }
-        else if (playerCurrentHp <= 0) { winner = 'enemy'; logs = addLog(logs, `💀 ${pPet.name} perdeu...`, 'lose'); anim = { type: 'faint-player', duration: 800 }; }
 
-        set({ battle: { ...battle, playerCurrentHp, enemyCurrentHp, logs, turn, winner, currentAnimation: anim, showDamage: { player: pDmgShow, enemy: eDmgShow } } });
+        if (enemyCurrentHp <= 0) {
+          winner = 'player';
+          logs = addLog(logs, `🎉 ${pPet.name} venceu!`, 'win');
+          anim = { type: 'faint-enemy', duration: 800 };
+        } else if (playerCurrentHp <= 0) {
+          winner = 'enemy';
+          logs = addLog(logs, `😢 ${pPet.name} foi derrotado...`, 'lose');
+          anim = { type: 'faint-player', duration: 800 };
+        }
+
+        set({
+          battle: {
+            ...battle,
+            playerCurrentHp,
+            enemyCurrentHp,
+            logs,
+            turn,
+            winner,
+            currentAnimation: anim,
+            showDamage: { player: pDmgShow, enemy: eDmgShow },
+          },
+          totalBattles: winner ? state.totalBattles + 1 : state.totalBattles,
+        });
       },
 
       clearBattleAnimation: () => {
-        set((s) => ({ battle: { ...s.battle, currentAnimation: { type: 'idle', duration: 0 }, showDamage: { player: null, enemy: null } } }));
+        set((s) => ({
+          battle: {
+            ...s.battle,
+            currentAnimation: { type: 'idle', duration: 0 },
+            showDamage: { player: null, enemy: null },
+          },
+        }));
       },
 
       endBattle: () => {
         const state = get();
         const { battle } = state;
         if (!battle.playerPet) return;
+
         let coins = state.coins;
         let gems = state.gems;
         const petId = battle.playerPet.id;
+
         const pets = state.pets.map((p) => {
           if (p.id !== petId) return p;
           const ns = { ...p.stats };
@@ -380,28 +420,46 @@ export const useGameStore = create<GameState>()(
             const expGain = 30 + (battle.enemyPet?.stats.level ?? 1) * 10;
             ns.exp += expGain;
             while (ns.exp >= ns.expToNext) {
-              ns.exp -= ns.expToNext; ns.level += 1;
+              ns.exp -= ns.expToNext;
+              ns.level += 1;
               ns.expToNext = Math.floor(ns.expToNext * 1.3);
-              ns.maxHp += 8; ns.hp = ns.maxHp; ns.attack += 3; ns.defense += 2; ns.speed += 2;
+              ns.maxHp += 8;
+              ns.hp = ns.maxHp;
+              ns.attack += 3;
+              ns.defense += 2;
+              ns.speed += 2;
             }
             return { ...p, stats: ns, wins: p.wins + 1 };
           }
-          // XP parcial mesmo ao perder
           const expLoss = 10 + (battle.enemyPet?.stats.level ?? 1) * 3;
           ns.exp += expLoss;
           while (ns.exp >= ns.expToNext) {
-            ns.exp -= ns.expToNext; ns.level += 1;
+            ns.exp -= ns.expToNext;
+            ns.level += 1;
             ns.expToNext = Math.floor(ns.expToNext * 1.3);
-            ns.maxHp += 8; ns.hp = ns.maxHp; ns.attack += 3; ns.defense += 2; ns.speed += 2;
+            ns.maxHp += 8;
+            ns.hp = ns.maxHp;
+            ns.attack += 3;
+            ns.defense += 2;
+            ns.speed += 2;
           }
           return { ...p, stats: ns, losses: p.losses + 1 };
         });
-        if (battle.winner === 'player') { coins += 100 + (battle.enemyPet?.stats.level ?? 1) * 20; gems += Math.random() < 0.3 ? 1 : 0; } else { coins += 20; }
+
+        if (battle.winner === 'player') {
+          coins += 100 + (battle.enemyPet?.stats.level ?? 1) * 20;
+          gems += Math.random() < 0.3 ? 1 : 0;
+        }
+
         set({
-          pets, coins, gems, totalBattles: state.totalBattles + 1,
+          pets,
+          coins,
+          gems,
           battle: { ...defaultBattle },
-          screen: state.explore.isExploring ? 'explore' : 'collection',
-          explore: state.explore.isExploring ? { ...state.explore, stepCount: 0, encounterPending: false, encounterFlash: false } : state.explore,
+          screen: state.explore.isExploring ? 'explore' : 'menu',
+          explore: state.explore.isExploring
+            ? { ...state.explore, stepCount: 0, encounterPending: false, encounterFlash: false }
+            : state.explore,
         });
       },
 
@@ -414,13 +472,24 @@ export const useGameStore = create<GameState>()(
       },
 
       renamePet: (petId, newName) => {
-        set((s) => ({ pets: s.pets.map((p) => p.id !== petId ? p : { ...p, name: newName }) }));
+        set((s) => ({
+          pets: s.pets.map((p) => p.id !== petId ? p : { ...p, name: newName }),
+        }));
       },
 
-      // ===== EXPLORE =====
+      // EXPLORE
       startExploring: (zone: MapZone) => {
         set({
-          explore: { isExploring: true, currentZone: zone, avatarX: 50, avatarY: 70, direction: 'down', stepCount: 0, encounterPending: false, encounterFlash: false },
+          explore: {
+            isExploring: true,
+            currentZone: zone,
+            avatarX: 50,
+            avatarY: 70,
+            direction: 'down',
+            stepCount: 0,
+            encounterPending: false,
+            encounterFlash: false,
+          },
           screen: 'explore',
         });
       },
@@ -440,17 +509,28 @@ export const useGameStore = create<GameState>()(
       triggerEncounter: () => set((s) => ({ explore: { ...s.explore, encounterPending: true, encounterFlash: true } })),
       setEncounterFlash: (v) => set((s) => ({ explore: { ...s.explore, encounterFlash: v } })),
       clearEncounter: () => set((s) => ({ explore: { ...s.explore, encounterPending: false, encounterFlash: false } })),
-
       stopExploring: () => set({ explore: { ...defaultExplore }, screen: 'menu' }),
     }),
     {
       name: 'cryptopets-arena-save',
       partialize: (state) => ({
-        playerName: state.playerName, playerGender: state.playerGender, playerClass: state.playerClass, coins: state.coins, gems: state.gems,
-        pets: state.pets, selectedPetId: state.selectedPetId,
-        totalBattles: state.totalBattles, totalCaptures: state.totalCaptures,
-        cryptoBalls: state.cryptoBalls, exploreSpeed: state.exploreSpeed, encounterMode: state.encounterMode, isVip: state.isVip, inventory: state.inventory, seenPets: state.seenPets,
-        walletConnected: state.walletConnected, walletAddress: state.walletAddress,
+        playerName: state.playerName,
+        playerGender: state.playerGender,
+        playerClass: state.playerClass,
+        coins: state.coins,
+        gems: state.gems,
+        pets: state.pets,
+        selectedPetId: state.selectedPetId,
+        totalBattles: state.totalBattles,
+        totalCaptures: state.totalCaptures,
+        cryptoBalls: state.cryptoBalls,
+        exploreSpeed: state.exploreSpeed,
+        encounterMode: state.encounterMode,
+        isVip: state.isVip,
+        inventory: state.inventory,
+        seenPets: state.seenPets,
+        walletConnected: state.walletConnected,
+        walletAddress: state.walletAddress,
       }),
     }
   )

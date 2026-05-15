@@ -1,16 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { ELEMENT_EMOJIS } from '../data/pets';
-import { BattleSprite } from './BattleSprite';
+import PetSprite from './PetSprite';
 
 export default function Battle() {
-  const { battle, processBattleTurn, endBattle, setBattleSpeed, setScreen, clearBattleAnimation, explore } = useGameStore();
+  const { battle, processBattleTurn, endBattle, setBattleSpeed, setScreen, clearBattleAnimation } = useGameStore();
   const logRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const animTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const expAnimRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const expStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const returnTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const postBattleStartedRef = useRef(false);
   const [displayExp, setDisplayExp] = useState(0);
   const [displayExpToNext, setDisplayExpToNext] = useState(100);
@@ -24,7 +21,6 @@ export default function Battle() {
     }
   }, [battle.isActive, battle.isAutoPlaying, battle.winner, battle.battleSpeed, processBattleTurn]);
 
-  // Initialize displayed EXP/level from current pet
   useEffect(() => {
     if (battle.playerPet) {
       setDisplayExp(battle.playerPet.stats.exp);
@@ -32,60 +28,22 @@ export default function Battle() {
       setDisplayLevel(battle.playerPet.stats.level);
       setExpGainText(null);
       postBattleStartedRef.current = false;
-      if (expAnimRef.current) clearInterval(expAnimRef.current);
-      if (expStartTimerRef.current) clearTimeout(expStartTimerRef.current);
-      if (returnTimerRef.current) clearTimeout(returnTimerRef.current);
     }
   }, [battle.playerPet?.id, battle.isActive]);
 
-  // When battle ends, animate exp gain then auto-return
   useEffect(() => {
     if (!battle.winner || !battle.playerPet || postBattleStartedRef.current) return;
     postBattleStartedRef.current = true;
-
     const expGain = battle.winner === 'player'
       ? 30 + (battle.enemyPet?.stats.level ?? 1) * 10
       : 10 + (battle.enemyPet?.stats.level ?? 1) * 3;
-
     setExpGainText(expGain);
 
-    let currentExp = battle.playerPet.stats.exp;
-    let currentExpToNext = battle.playerPet.stats.expToNext;
-    let currentLevel = battle.playerPet.stats.level;
-    let remaining = expGain;
-
-    expStartTimerRef.current = setTimeout(() => {
-      expAnimRef.current = setInterval(() => {
-        const step = Math.max(1, Math.ceil(expGain / 40));
-        const add = Math.min(step, remaining);
-        remaining -= add;
-        currentExp += add;
-
-        while (currentExp >= currentExpToNext) {
-          currentExp -= currentExpToNext;
-          currentLevel += 1;
-          currentExpToNext = Math.floor(currentExpToNext * 1.3);
-        }
-
-        setDisplayExp(currentExp);
-        setDisplayExpToNext(currentExpToNext);
-        setDisplayLevel(currentLevel);
-
-        if (remaining <= 0) {
-          if (expAnimRef.current) clearInterval(expAnimRef.current);
-          returnTimerRef.current = setTimeout(() => {
-            setExpGainText(null);
-            endBattle();
-          }, 1400);
-        }
-      }, 60);
-    }, 900);
-
-    return () => {
-      if (expStartTimerRef.current) clearTimeout(expStartTimerRef.current);
-      if (returnTimerRef.current) clearTimeout(returnTimerRef.current);
-      if (expAnimRef.current) clearInterval(expAnimRef.current);
-    };
+    const timer = setTimeout(() => {
+      setExpGainText(null);
+      endBattle();
+    }, 2500);
+    return () => clearTimeout(timer);
   }, [battle.winner, battle.playerPet?.id, endBattle]);
 
   useEffect(() => {
@@ -104,7 +62,7 @@ export default function Battle() {
       <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f2e' }}>
         <div style={{ textAlign: 'center', padding: 24 }}>
           <p style={{ color: '#facc15', fontSize: 16, marginBottom: 16 }}>Selecione um pet!</p>
-          <button onClick={() => setScreen('collection')} className="game-btn bg-yellow-600 text-white">← Coleção</button>
+          <button onClick={() => setScreen('collection')} className="game-btn bg-yellow-600 text-white">↪ Coleção</button>
         </div>
       </div>
     );
@@ -130,202 +88,108 @@ export default function Battle() {
   const logColor = (t: string) => {
     if (t === 'critical') return '#f87171';
     if (t === 'win') return '#4ade80';
-    if (t === 'lose') return '#ef4444';
-    if (t === 'miss') return '#6b7280';
-    if (t === 'attack') return '#fdba74';
-    if (t === 'info') return '#93c5fd';
+    if (t === 'lose') return '#f87171';
+    if (t === 'info') return '#60a5fa';
     return '#d1d5db';
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(180deg,#151542 0%,#0a0a22 48%,#142219 100%)' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0f0f2e' }}>
       {/* Header */}
-      <div style={{ padding: '16px 28px 14px 28px', background: '#111128', borderBottom: '1px solid #252550', flexShrink: 0 }}>
-        <div style={{
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 16,
-          padding: '12px 14px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-        }}>
-          <button
-            onClick={() => setScreen(explore.isExploring ? 'explore' : 'collection')}
-            style={{ background: 'none', border: 'none', color: '#facc15', fontSize: 14, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
-          >
-            ← {battle.winner ? 'Sair' : 'Fugir'}
-          </button>
-
-          <div style={{ textAlign: 'center', flex: 1, minWidth: 0 }}>
-            <p style={{ color: '#f87171', fontWeight: 700, fontSize: 14 }}>⚔️ Arena</p>
-            <p style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>Turno {battle.turn}</p>
-          </div>
-
-          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-            {[{ l: '1x', s: 2000 }, { l: '2x', s: 1200 }, { l: '5x', s: 600 }].map((sp) => (
-              <button
-                key={sp.l}
-                onClick={() => setBattleSpeed(sp.s)}
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: 10,
-                  border: '1px solid transparent',
-                  background: battle.battleSpeed === sp.s ? 'rgba(250,204,21,0.18)' : 'rgba(255,255,255,0.05)',
-                  color: battle.battleSpeed === sp.s ? '#facc15' : '#9ca3af',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                {sp.l}
-              </button>
-            ))}
-          </div>
+      <div style={{ padding: '16px 28px 14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: '#111128', borderBottom: '1px solid #252550' }}>
+        <div style={{ textAlign: 'center', flex: 1, minWidth: 0 }}>
+          <p style={{ color: '#f87171', fontWeight: 700, fontSize: 14 }}>⚔️ Arena</p>
+          <p style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>Turno {battle.turn}</p>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {[{ l: '1x', s: 2000 }, { l: '2x', s: 1200 }, { l: '5x', s: 600 }].map((sp) => (
+            <button key={sp.l} onClick={() => setBattleSpeed(sp.s)} className="active:scale-90 transition-transform" style={{
+              padding: '5px 10px', borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: 'pointer',
+              background: battle.battleSpeed === sp.s ? 'rgba(250,204,21,0.2)' : 'rgba(255,255,255,0.05)',
+              border: battle.battleSpeed === sp.s ? '1px solid rgba(250,204,21,0.4)' : '1px solid rgba(255,255,255,0.08)',
+              color: battle.battleSpeed === sp.s ? '#facc15' : '#6b7280',
+            }}>{sp.l}</button>
+          ))}
         </div>
       </div>
 
-      {/* Arena */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/images/arena-bg.png)', backgroundSize: 'cover', backgroundPosition: 'center', imageRendering: 'pixelated' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.08) 45%, rgba(0,0,0,0.42) 100%)' }} />
-
-        <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
-          {/* Enemy area */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '20px 28px 8px 28px', position: 'relative' }}>
-            <div style={{
-              position: 'absolute', top: 16, left: 24, right: 24,
-              background: 'rgba(0,0,0,0.58)', backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(239,68,68,0.18)', borderRadius: 16,
-              padding: '12px 14px', zIndex: 20,
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, gap: 10 }}>
-                <span style={{ color: 'white', fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{battle.enemyPet.name}</span>
-                <span style={{ color: '#9ca3af', fontSize: 11, flexShrink: 0 }}>{ELEMENT_EMOJIS[battle.enemyPet.element]} Lv.{battle.enemyPet.stats.level}</span>
-              </div>
-              <div style={{ height: 12, background: '#1f2937', borderRadius: 9999, overflow: 'hidden' }}>
-                <div style={{ height: '100%', borderRadius: 9999, width: `${eHp}%`, background: hpC(eHp), transition: 'width 0.3s' }} />
-              </div>
-              <p style={{ color: '#6b7280', fontSize: 11, marginTop: 6, textAlign: 'right' }}>{battle.enemyCurrentHp}/{battle.enemyPet.stats.maxHp}</p>
+      {/* Battle field */}
+      <div style={{ flex: 1, position: 'relative', background: 'linear-gradient(180deg, #0a0a2e 0%, #151535 50%, #1a2a1a 100%)', overflow: 'hidden' }}>
+        {/* Enemy */}
+        <div style={{ position: 'absolute', top: '10%', right: '15%', textAlign: 'center' }}>
+          <div style={{ marginBottom: 8 }}>
+            <p style={{ color: '#f87171', fontWeight: 700, fontSize: 13 }}>{battle.enemyPet.name} {ELEMENT_EMOJIS[battle.enemyPet.element]}</p>
+            <p style={{ color: '#6b7280', fontSize: 10 }}>Lv.{battle.enemyPet.stats.level}</p>
+            <div style={{ width: 120, height: 8, background: '#1f2937', borderRadius: 99, overflow: 'hidden', marginTop: 4 }}>
+              <div style={{ height: '100%', borderRadius: 99, background: hpC(eHp), width: `${eHp}%`, transition: 'width 0.3s' }} />
             </div>
-
-            <div style={{ position: 'relative', marginTop: 50 }}>
-              {battle.showDamage.enemy !== null && (
-                <div style={{ position: 'absolute', top: -32, left: '50%', zIndex: 30 }} className="animate-damage-float">
-                  <span style={{ color: '#f87171', fontWeight: 700, fontSize: 20 }}>-{battle.showDamage.enemy}</span>
-                </div>
-              )}
-              <BattleSprite
-                pet={battle.enemyPet}
-                className={`w-28 h-28 sm:w-36 sm:h-36 ${eClass}`}
-                style={{
-                  transform: 'scaleX(-1)',
-                  opacity: battle.winner === 'player' ? 0.3 : 1,
-                  filter: battle.enemyCurrentHp <= 0 ? 'grayscale(1) brightness(0.4)' : undefined,
-                }}
-              />
-            </div>
+            <p style={{ color: '#9ca3af', fontSize: 9, marginTop: 2 }}>{battle.enemyCurrentHp}/{battle.enemyPet.stats.maxHp}</p>
           </div>
+          <div className={eClass} style={{ width: 100, height: 100, margin: '0 auto', transform: 'scaleX(-1)' }}>
+            <PetSprite pet={battle.enemyPet} size={100} animate showParticles={false} />
+          </div>
+          {battle.showDamage.enemy !== null && (
+            <div className="animate-damage-float" style={{ position: 'absolute', top: -10, left: '50%', color: '#f87171', fontWeight: 900, fontSize: 20, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+              -{battle.showDamage.enemy}
+            </div>
+          )}
+        </div>
 
-          {/* Center badge */}
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 0 6px 0', zIndex: 20 }}>
-            {!battle.winner ? (
-              <div style={{ background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(250,204,21,0.16)', borderRadius: 9999, padding: '7px 18px' }}>
-                <span className="game-font text-yellow-400 text-sm animate-pulse">VS</span>
-              </div>
-            ) : (
-              <div style={{
-                padding: '10px 18px', borderRadius: 16, border: `2px solid ${battle.winner === 'player' ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`,
-                background: battle.winner === 'player' ? 'rgba(20,83,45,0.55)' : 'rgba(127,29,29,0.55)',
-              }} className="anim-bounce">
-                <span style={{ color: 'white', fontWeight: 700, fontSize: 16 }}>{battle.winner === 'player' ? '🏆 VITÓRIA!' : '💀 DERROTA!'}</span>
-              </div>
+        {/* Player */}
+        <div style={{ position: 'absolute', bottom: '15%', left: '15%', textAlign: 'center' }}>
+          <div className={pClass} style={{ width: 110, height: 110, margin: '0 auto' }}>
+            <PetSprite pet={battle.playerPet} size={110} animate showParticles={false} />
+          </div>
+          {battle.showDamage.player !== null && (
+            <div className="animate-damage-float" style={{ position: 'absolute', top: -10, left: '50%', color: '#f87171', fontWeight: 900, fontSize: 20, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+              -{battle.showDamage.player}
+            </div>
+          )}
+          <div style={{ marginTop: 8 }}>
+            <p style={{ color: '#22c55e', fontWeight: 700, fontSize: 13 }}>{battle.playerPet.name} {ELEMENT_EMOJIS[battle.playerPet.element]}</p>
+            <p style={{ color: '#facc15', fontSize: 10 }}>Lv.{displayLevel}</p>
+            <div style={{ width: 130, height: 8, background: '#1f2937', borderRadius: 99, overflow: 'hidden', marginTop: 4 }}>
+              <div style={{ height: '100%', borderRadius: 99, background: hpC(pHp), width: `${pHp}%`, transition: 'width 0.3s' }} />
+            </div>
+            <p style={{ color: '#9ca3af', fontSize: 9, marginTop: 2 }}>{battle.playerCurrentHp}/{battle.playerPet.stats.maxHp}</p>
+            {/* EXP bar */}
+            <div style={{ width: 130, height: 5, background: '#1f2937', borderRadius: 99, overflow: 'hidden', marginTop: 4 }}>
+              <div style={{ height: '100%', borderRadius: 99, background: '#60a5fa', width: `${(displayExp / displayExpToNext) * 100}%`, transition: 'width 0.2s' }} />
+            </div>
+            {expGainText !== null && (
+              <p style={{ color: '#60a5fa', fontSize: 11, fontWeight: 700, marginTop: 4 }}>+{expGainText} EXP</p>
             )}
           </div>
-
-          {/* Player area */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', padding: '8px 28px 20px 28px', position: 'relative' }}>
-            <div style={{ position: 'relative', marginBottom: 52 }}>
-              {battle.showDamage.player !== null && (
-                <div style={{ position: 'absolute', top: -32, left: '50%', zIndex: 30 }} className="animate-damage-float">
-                  <span style={{ color: '#f87171', fontWeight: 700, fontSize: 20 }}>-{battle.showDamage.player}</span>
-                </div>
-              )}
-              <BattleSprite
-                pet={battle.playerPet}
-                className={`w-32 h-32 sm:w-40 sm:h-40 ${pClass}`}
-                style={{
-                  opacity: battle.winner === 'enemy' ? 0.3 : 1,
-                  filter: battle.playerCurrentHp <= 0 ? 'grayscale(1) brightness(0.4)' : undefined,
-                }}
-              />
-            </div>
-
-            <div style={{
-              position: 'absolute', bottom: 16, left: 24, right: 24,
-              background: 'rgba(0,0,0,0.58)', backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(34,197,94,0.18)', borderRadius: 16,
-              padding: '12px 14px', zIndex: 20,
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, gap: 10 }}>
-                <span style={{ color: 'white', fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{battle.playerPet.name}</span>
-                <span style={{ color: '#9ca3af', fontSize: 11, flexShrink: 0 }}>{ELEMENT_EMOJIS[battle.playerPet.element]} Lv.{displayLevel}</span>
-              </div>
-              <div style={{ height: 12, background: '#1f2937', borderRadius: 9999, overflow: 'hidden' }}>
-                <div style={{ height: '100%', borderRadius: 9999, width: `${pHp}%`, background: hpC(pHp), transition: 'width 0.3s' }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-                <p style={{ color: '#6b7280', fontSize: 11 }}>{battle.playerCurrentHp}/{battle.playerPet.stats.maxHp}</p>
-                <p style={{ color: '#60a5fa', fontSize: 10, fontWeight: 600 }}>EXP {displayExp}/{displayExpToNext}</p>
-              </div>
-              {/* EXP bar */}
-              <div style={{ height: 5, background: '#1f2937', borderRadius: 9999, overflow: 'hidden', marginTop: 4 }}>
-                <div style={{ height: '100%', borderRadius: 9999, background: '#60a5fa', width: `${(displayExp / displayExpToNext) * 100}%`, transition: 'width 0.15s linear' }} />
-              </div>
-              {expGainText !== null && (
-                <p style={{ color: '#60a5fa', fontSize: 11, fontWeight: 700, marginTop: 6, textAlign: 'right' }} className="animate-pulse">+{expGainText} EXP</p>
-              )}
-            </div>
-          </div>
         </div>
-      </div>
 
-      {/* Bottom panel */}
-      <div style={{ flexShrink: 0, background: '#111128', borderTop: '1px solid #252550' }}>
+        {/* Winner overlay */}
         {battle.winner && (
-          <div style={{ padding: '12px 24px 4px 24px' }}>
-            <div style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 16,
-              padding: '10px 14px',
-              textAlign: 'center',
-            }}>
-              <p style={{ color: '#9ca3af', fontSize: 11, fontWeight: 700 }}>
-                {expGainText !== null ? 'Atualizando EXP...' : 'Voltando em instantes...'}
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)' }}>
+            <div style={{ textAlign: 'center', background: '#111128', borderRadius: 20, padding: '24px 40px', border: '1px solid #252550' }}>
+              <p style={{ fontSize: 36 }}>{battle.winner === 'player' ? '🎉' : '😢'}</p>
+              <p style={{ color: battle.winner === 'player' ? '#4ade80' : '#f87171', fontWeight: 900, fontSize: 18, marginTop: 8 }}>
+                {battle.winner === 'player' ? 'VITÓRIA!' : 'DERROTA'}
               </p>
+              {battle.winner === 'player' && (
+                <p style={{ color: '#eab308', fontSize: 12, marginTop: 8 }}>
+                  +💰{100 + (battle.enemyPet?.stats.level ?? 1) * 20}
+                </p>
+              )}
             </div>
           </div>
         )}
+      </div>
 
-        <div style={{ padding: '10px 24px 16px 24px' }}>
-          <div style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 16,
-            overflow: 'hidden',
-          }}>
-            <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <p style={{ color: '#9ca3af', fontSize: 12, fontWeight: 700, textAlign: 'center' }}>Log da batalha</p>
-            </div>
-            <div ref={logRef} style={{ height: 112, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4 }} className="scrollbar-thin">
-              {battle.logs.map((log) => (
-                <p key={log.id} style={{ fontSize: 12, lineHeight: 1.45, color: logColor(log.type) }}>{log.message}</p>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* Battle log */}
+      <div ref={logRef} style={{
+        height: 120, flexShrink: 0, overflowY: 'auto', padding: '10px 20px',
+        background: '#0a0a1a', borderTop: '1px solid #252550',
+      }}>
+        {battle.logs.slice(-8).map((log) => (
+          <p key={log.id} style={{ color: logColor(log.type), fontSize: 11, marginBottom: 4, lineHeight: 1.3 }}>
+            {log.message}
+          </p>
+        ))}
       </div>
     </div>
   );

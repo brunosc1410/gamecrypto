@@ -72,24 +72,24 @@ export interface ExploreState {
   encounterFlash: boolean;
 }
 
-export type EncounterPhase = 
-  | 'appearing'    // pet is sliding in
-  | 'ready'        // waiting for player to throw
-  | 'throwing'     // ball flying towards pet
-  | 'shaking'      // ball shaking 1..3
-  | 'caught'       // success!
-  | 'broke-free'   // pet broke out, still here
-  | 'fled'         // pet ran away
-  | 'battle';      // player chose to battle instead
+export type EncounterPhase =
+  | 'appearing'
+  | 'ready'
+  | 'throwing'
+  | 'shaking'
+  | 'caught'
+  | 'broke-free'
+  | 'fled'
+  | 'battle';
 
 export interface EncounterState {
   active: boolean;
   wildPet: Pet | null;
   phase: EncounterPhase;
-  shakeCount: number;      // 0-3 shakes before result
+  shakeCount: number;
   ballsLeft: number;
-  catchChance: number;     // 0-1 base catch chance
-  fleeChance: number;      // 0-1 chance pet flees after break
+  catchChance: number;
+  fleeChance: number;
   attempts: number;
 }
 

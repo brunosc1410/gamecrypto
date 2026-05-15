@@ -6,20 +6,9 @@ import ActivePetBadge from './ActivePetBadge';
 
 export default function MainMenu() {
   const {
-    setScreen,
-    playerName,
-    playerGender,
-    playerClass,
-    addStarterPets,
-    pets,
-    coins,
-    gems,
-    totalBattles,
-    startExploring,
-    selectedPetId,
-    cryptoBalls,
-    totalCaptures,
-    isVip,
+    setScreen, playerName, playerGender, playerClass,
+    addStarterPets, pets, coins, gems, totalBattles,
+    startExploring, selectedPetId, cryptoBalls, totalCaptures, isVip,
   } = useGameStore();
 
   const cls = AVATAR_CLASSES.find((a) => a.class === playerClass);
@@ -30,7 +19,12 @@ export default function MainMenu() {
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div style={{ padding: '40px 28px 48px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           {/* Logo */}
-          <img src="/images/logo.png" alt="CryptoPets Arena" style={{ width: 200, imageRendering: 'pixelated' }} className="drop-shadow-2xl" />
+          <div style={{ textAlign: 'center' }}>
+            <h1 style={{ color: '#facc15', fontSize: 22, fontWeight: 900, fontFamily: "'Press Start 2P', system-ui", textShadow: '0 0 20px rgba(250,204,21,0.3)' }}>
+              🎮 CryptoPets
+            </h1>
+            <p style={{ color: '#f87171', fontSize: 14, fontWeight: 700, marginTop: 4, fontFamily: "'Press Start 2P', system-ui" }}>ARENA</p>
+          </div>
           <p style={{ color: '#eab308', fontSize: 11, fontWeight: 700, marginTop: 10 }} className="animate-pulse">
             ⚔️ NFT BATTLE GAME ⚔️
           </p>
@@ -39,15 +33,10 @@ export default function MainMenu() {
           <div
             onClick={() => setScreen('profile')}
             style={{
-              width: '100%',
-              marginTop: 28,
-              ...card,
-              padding: 18,
+              width: '100%', marginTop: 28, ...card, padding: 18,
               display: 'grid',
               gridTemplateColumns: pets.length > 0 ? '52px 1fr auto 18px' : '52px 1fr 18px',
-              alignItems: 'center',
-              gap: 12,
-              cursor: 'pointer',
+              alignItems: 'center', gap: 12, cursor: 'pointer',
             }}
             className="active:scale-[0.98] transition-transform"
           >
@@ -57,20 +46,10 @@ export default function MainMenu() {
             <div style={{ minWidth: 0 }}>
               {isVip && (
                 <div style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  padding: '3px 8px',
-                  borderRadius: 999,
+                  display: 'inline-flex', alignItems: 'center', padding: '3px 8px', borderRadius: 999,
                   background: 'linear-gradient(90deg, rgba(255,215,0,0.22), rgba(234,179,8,0.14))',
-                  border: '1px solid rgba(250,204,21,0.35)',
-                  color: '#fde68a',
-                  fontSize: 8,
-                  fontWeight: 700,
-                  letterSpacing: 0.3,
-                  marginBottom: 5,
-                }}>
-                  👑 VIP
-                </div>
+                  border: '1px solid rgba(250,204,21,0.35)', color: '#fde68a', fontSize: 8, fontWeight: 700, marginBottom: 5,
+                }}>👑 VIP</div>
               )}
               <p style={{ color: 'white', fontWeight: 700, fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{playerName}</p>
               <p style={{ color: '#9ca3af', fontSize: 11, marginTop: 3 }}>
@@ -106,22 +85,13 @@ export default function MainMenu() {
           {/* Actions */}
           {pets.length === 0 ? (
             <button
-              onClick={() => { addStarterPets(); }}
+              onClick={() => addStarterPets()}
               style={{
-                width: '100%',
-                marginTop: 32,
-                padding: '16px 0',
+                width: '100%', marginTop: 32, padding: '16px 0',
                 background: 'linear-gradient(90deg, #16a34a, #22c55e)',
-                border: 'none',
-                borderRadius: 14,
-                color: 'white',
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: 'pointer',
+                border: 'none', borderRadius: 14, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer',
               }}
-            >
-              🎮 Iniciar Jogo
-            </button>
+            >🎮 Iniciar Jogo</button>
           ) : (
             <>
               {/* Explore */}
@@ -133,16 +103,9 @@ export default function MainMenu() {
                       key={z.id}
                       onClick={() => { if (selectedPetId) startExploring(z.id); else setScreen('collection'); }}
                       style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 6,
-                        background: '#0a0a1a',
-                        border: '1px solid #1e1e40',
-                        borderRadius: 12,
-                        padding: '14px 8px',
-                        cursor: 'pointer',
-                        color: 'white',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                        background: '#0a0a1a', border: '1px solid #1e1e40', borderRadius: 12,
+                        padding: '14px 8px', cursor: 'pointer', color: 'white',
                       }}
                       className="active:scale-95 transition-transform"
                     >
@@ -178,19 +141,10 @@ function NavBtn({ label, bg, onClick }: { label: string; bg: string; onClick: ()
       onClick={onClick}
       className="active:scale-95 transition-transform"
       style={{
-        padding: '14px 8px',
-        background: bg,
-        border: 'none',
-        borderRadius: 12,
-        color: 'white',
-        fontSize: 11,
-        fontWeight: 700,
-        cursor: 'pointer',
-        fontFamily: "'Press Start 2P', system-ui",
-        letterSpacing: 0.5,
+        padding: '14px 8px', background: bg, border: 'none', borderRadius: 12,
+        color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+        fontFamily: "'Press Start 2P', system-ui", letterSpacing: 0.5,
       }}
-    >
-      {label}
-    </button>
+    >{label}</button>
   );
 }

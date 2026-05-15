@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+/* build-bust: v2 */
+
 /* ===== FONTS ===== */
 .game-font {
   font-family: 'Press Start 2P', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', system-ui, sans-serif;

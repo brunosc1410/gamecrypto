@@ -81,7 +81,7 @@ function addLog(logs: BattleLog[], message: string, type: BattleLog['type']): Ba
 const defaultBattle: BattleState = {
   isActive: false, playerPet: null, enemyPet: null,
   playerCurrentHp: 0, enemyCurrentHp: 0, logs: [], turn: 0,
-  winner: null, isAutoPlaying: true, battleSpeed: 1200,
+  winner: null, isAutoPlaying: true, battleSpeed: 2000,
   currentAnimation: { type: 'none', duration: 0 },
   showDamage: { player: null, enemy: null },
 };
@@ -259,10 +259,13 @@ export const useGameStore = create<GameState>()(
             id: genId(),
             wins: 0, losses: 0,
           };
+          // Reward based on rarity + level
+          const rarityReward: Record<string, number> = { common: 30, rare: 80, epic: 200, legendary: 500 };
+          const captureCoins = (rarityReward[enc.wildPet.rarity] ?? 30) + (enc.wildPet.stats.level * 10);
           set({
             pets: [...state.pets, newPet],
             totalCaptures: state.totalCaptures + 1,
-            coins: state.coins + 50,
+            coins: state.coins + captureCoins,
             encounter: { ...defaultEncounter },
             screen: state.explore.isExploring ? 'explore' : 'collection',
             explore: state.explore.isExploring
@@ -376,7 +379,7 @@ export const useGameStore = create<GameState>()(
           if (battle.winner === 'player') {
             const expGain = 30 + (battle.enemyPet?.stats.level ?? 1) * 10;
             ns.exp += expGain;
-            if (ns.exp >= ns.expToNext) {
+            while (ns.exp >= ns.expToNext) {
               ns.exp -= ns.expToNext; ns.level += 1;
               ns.expToNext = Math.floor(ns.expToNext * 1.3);
               ns.maxHp += 8; ns.hp = ns.maxHp; ns.attack += 3; ns.defense += 2; ns.speed += 2;
@@ -386,7 +389,7 @@ export const useGameStore = create<GameState>()(
           // XP parcial mesmo ao perder
           const expLoss = 10 + (battle.enemyPet?.stats.level ?? 1) * 3;
           ns.exp += expLoss;
-          if (ns.exp >= ns.expToNext) {
+          while (ns.exp >= ns.expToNext) {
             ns.exp -= ns.expToNext; ns.level += 1;
             ns.expToNext = Math.floor(ns.expToNext * 1.3);
             ns.maxHp += 8; ns.hp = ns.maxHp; ns.attack += 3; ns.defense += 2; ns.speed += 2;

@@ -39,10 +39,11 @@ export default function Profile() {
 
             {/* Avatar card — trainer left / encounter config right */}
             <div style={{ ...card, padding: 18 }}>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'stretch' }}>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'stretch' }}>
                 {/* Trainer block */}
                 <div style={{
-                  width: '42%',
+                  width: 148,
+                  flexShrink: 0,
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                   gap: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
                   borderRadius: 14, padding: 14,
@@ -50,17 +51,10 @@ export default function Profile() {
                   <PlayerAvatar gender={playerGender} avatarClass={playerClass} size={72} />
                   {isVip && (
                     <div style={{
-                      padding: '4px 10px',
-                      borderRadius: 999,
+                      padding: '4px 10px', borderRadius: 999,
                       background: 'linear-gradient(90deg, rgba(255,215,0,0.22), rgba(234,179,8,0.14))',
-                      border: '1px solid rgba(250,204,21,0.35)',
-                      color: '#fde68a',
-                      fontSize: 9,
-                      fontWeight: 700,
-                      letterSpacing: 0.4,
-                    }}>
-                      👑 VIP
-                    </div>
+                      border: '1px solid rgba(250,204,21,0.35)', color: '#fde68a', fontSize: 9, fontWeight: 700,
+                    }}>👑 VIP</div>
                   )}
                   <span style={{ color: 'white', fontWeight: 700, fontSize: 16, textAlign: 'center', lineHeight: 1.2 }}>{playerName}</span>
                   <span style={{ color: '#9ca3af', fontSize: 11, textAlign: 'center', lineHeight: 1.3 }}>
@@ -73,15 +67,17 @@ export default function Profile() {
                   }}>✏️ Editar</button>
                 </div>
 
-                {/* Encounter config block */}
+                {/* Encounter config block — more visible */}
                 <div style={{
                   flex: 1,
+                  minWidth: 0,
                   display: 'flex', flexDirection: 'column',
-                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: 14, padding: 12,
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 14, padding: 14,
+                  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)',
                 }}>
-                  <p style={{ color: '#f87171', fontSize: 12, fontWeight: 700, marginBottom: 4, textAlign: 'center' }}>⚙️ Config. Encontro</p>
-                  <p style={{ color: '#6b7280', fontSize: 9, textAlign: 'center', marginBottom: 10, lineHeight: 1.3 }}>Uma opção por vez</p>
+                  <p style={{ color: '#f87171', fontSize: 12, fontWeight: 700, marginBottom: 5, textAlign: 'center' }}>⚙️ Config. Encontro</p>
+                  <p style={{ color: '#6b7280', fontSize: 10, textAlign: 'center', marginBottom: 12, lineHeight: 1.35 }}>Uma opção por vez</p>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                     {([
                       { key: 'manual' as const, label: 'Manual', emoji: '🎮', color: '#9ca3af', free: true },
@@ -102,13 +98,13 @@ export default function Profile() {
                           }}
                           className="active:scale-[0.98] transition-transform"
                           style={{
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
-                            minHeight: 58, padding: '8px 4px', borderRadius: 12, cursor: active ? 'default' : 'pointer', textAlign: 'center',
-                            background: active ? `${opt.color}15` : 'rgba(255,255,255,0.02)',
-                            border: active ? `2px solid ${opt.color}50` : '2px solid rgba(255,255,255,0.05)',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+                            minHeight: 64, padding: '8px 6px', borderRadius: 12, cursor: active ? 'default' : 'pointer', textAlign: 'center',
+                            background: active ? `${opt.color}18` : 'rgba(255,255,255,0.025)',
+                            border: active ? `2px solid ${opt.color}55` : '2px solid rgba(255,255,255,0.05)',
                           }}>
                           <span style={{ fontSize: 18, lineHeight: 1 }}>{opt.emoji}</span>
-                          <div style={{ color: active ? opt.color : '#d1d5db', fontWeight: 700, fontSize: 10, lineHeight: 1.1 }}>{opt.label}</div>
+                          <div style={{ color: active ? opt.color : '#e5e7eb', fontWeight: 700, fontSize: 10, lineHeight: 1.1 }}>{opt.label}</div>
                           {!opt.free && !active ? (
                             <span style={{ color: isVip ? '#4ade80' : '#facc15', fontSize: 8, fontWeight: 700, lineHeight: 1 }}>{isVip ? 'FREE' : '💰50'}</span>
                           ) : active ? (

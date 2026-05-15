@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { ELEMENT_EMOJIS } from '../data/pets';
 import { BattleSprite } from './BattleSprite';
@@ -8,6 +8,14 @@ export default function Battle() {
   const logRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const animTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const expAnimRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const expStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const returnTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const postBattleStartedRef = useRef(false);
+  const [displayExp, setDisplayExp] = useState(0);
+  const [displayExpToNext, setDisplayExpToNext] = useState(100);
+  const [displayLevel, setDisplayLevel] = useState(1);
+  const [expGainText, setExpGainText] = useState<number | null>(null);
 
   useEffect(() => {
     if (battle.isActive && battle.isAutoPlaying && !battle.winner) {
@@ -16,16 +24,69 @@ export default function Battle() {
     }
   }, [battle.isActive, battle.isAutoPlaying, battle.winner, battle.battleSpeed, processBattleTurn]);
 
-  // Auto-battle mode: auto-collect reward when battle ends
+  // Initialize displayed EXP/level from current pet
   useEffect(() => {
-    if (battle.winner) {
-      const mode = useGameStore.getState().encounterMode;
-      if (mode === 'auto-battle') {
-        const t = setTimeout(() => endBattle(), 1500);
-        return () => clearTimeout(t);
-      }
+    if (battle.playerPet) {
+      setDisplayExp(battle.playerPet.stats.exp);
+      setDisplayExpToNext(battle.playerPet.stats.expToNext);
+      setDisplayLevel(battle.playerPet.stats.level);
+      setExpGainText(null);
+      postBattleStartedRef.current = false;
+      if (expAnimRef.current) clearInterval(expAnimRef.current);
+      if (expStartTimerRef.current) clearTimeout(expStartTimerRef.current);
+      if (returnTimerRef.current) clearTimeout(returnTimerRef.current);
     }
-  }, [battle.winner, endBattle]);
+  }, [battle.playerPet?.id, battle.isActive]);
+
+  // When battle ends, animate exp gain then auto-return
+  useEffect(() => {
+    if (!battle.winner || !battle.playerPet || postBattleStartedRef.current) return;
+    postBattleStartedRef.current = true;
+
+    const expGain = battle.winner === 'player'
+      ? 30 + (battle.enemyPet?.stats.level ?? 1) * 10
+      : 10 + (battle.enemyPet?.stats.level ?? 1) * 3;
+
+    setExpGainText(expGain);
+
+    let currentExp = battle.playerPet.stats.exp;
+    let currentExpToNext = battle.playerPet.stats.expToNext;
+    let currentLevel = battle.playerPet.stats.level;
+    let remaining = expGain;
+
+    expStartTimerRef.current = setTimeout(() => {
+      expAnimRef.current = setInterval(() => {
+        const step = Math.max(1, Math.ceil(expGain / 40));
+        const add = Math.min(step, remaining);
+        remaining -= add;
+        currentExp += add;
+
+        while (currentExp >= currentExpToNext) {
+          currentExp -= currentExpToNext;
+          currentLevel += 1;
+          currentExpToNext = Math.floor(currentExpToNext * 1.3);
+        }
+
+        setDisplayExp(currentExp);
+        setDisplayExpToNext(currentExpToNext);
+        setDisplayLevel(currentLevel);
+
+        if (remaining <= 0) {
+          if (expAnimRef.current) clearInterval(expAnimRef.current);
+          returnTimerRef.current = setTimeout(() => {
+            setExpGainText(null);
+            endBattle();
+          }, 1400);
+        }
+      }, 60);
+    }, 900);
+
+    return () => {
+      if (expStartTimerRef.current) clearTimeout(expStartTimerRef.current);
+      if (returnTimerRef.current) clearTimeout(returnTimerRef.current);
+      if (expAnimRef.current) clearInterval(expAnimRef.current);
+    };
+  }, [battle.winner, battle.playerPet?.id, endBattle]);
 
   useEffect(() => {
     if (battle.currentAnimation.type !== 'idle' && battle.currentAnimation.type !== 'none') {
@@ -103,7 +164,7 @@ export default function Battle() {
           </div>
 
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-            {[{ l: '1x', s: 1500 }, { l: '2x', s: 800 }, { l: '5x', s: 300 }].map((sp) => (
+            {[{ l: '1x', s: 2000 }, { l: '2x', s: 1200 }, { l: '5x', s: 600 }].map((sp) => (
               <button
                 key={sp.l}
                 onClick={() => setBattleSpeed(sp.s)}
@@ -209,12 +270,22 @@ export default function Battle() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, gap: 10 }}>
                 <span style={{ color: 'white', fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{battle.playerPet.name}</span>
-                <span style={{ color: '#9ca3af', fontSize: 11, flexShrink: 0 }}>{ELEMENT_EMOJIS[battle.playerPet.element]} Lv.{battle.playerPet.stats.level}</span>
+                <span style={{ color: '#9ca3af', fontSize: 11, flexShrink: 0 }}>{ELEMENT_EMOJIS[battle.playerPet.element]} Lv.{displayLevel}</span>
               </div>
               <div style={{ height: 12, background: '#1f2937', borderRadius: 9999, overflow: 'hidden' }}>
                 <div style={{ height: '100%', borderRadius: 9999, width: `${pHp}%`, background: hpC(pHp), transition: 'width 0.3s' }} />
               </div>
-              <p style={{ color: '#6b7280', fontSize: 11, marginTop: 6, textAlign: 'right' }}>{battle.playerCurrentHp}/{battle.playerPet.stats.maxHp}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+                <p style={{ color: '#6b7280', fontSize: 11 }}>{battle.playerCurrentHp}/{battle.playerPet.stats.maxHp}</p>
+                <p style={{ color: '#60a5fa', fontSize: 10, fontWeight: 600 }}>EXP {displayExp}/{displayExpToNext}</p>
+              </div>
+              {/* EXP bar */}
+              <div style={{ height: 5, background: '#1f2937', borderRadius: 9999, overflow: 'hidden', marginTop: 4 }}>
+                <div style={{ height: '100%', borderRadius: 9999, background: '#60a5fa', width: `${(displayExp / displayExpToNext) * 100}%`, transition: 'width 0.15s linear' }} />
+              </div>
+              {expGainText !== null && (
+                <p style={{ color: '#60a5fa', fontSize: 11, fontWeight: 700, marginTop: 6, textAlign: 'right' }} className="animate-pulse">+{expGainText} EXP</p>
+              )}
             </div>
           </div>
         </div>
@@ -223,25 +294,22 @@ export default function Battle() {
       {/* Bottom panel */}
       <div style={{ flexShrink: 0, background: '#111128', borderTop: '1px solid #252550' }}>
         {battle.winner && (
-          <div style={{ padding: '14px 24px 12px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ padding: '12px 24px 4px 24px' }}>
             <div style={{
               background: 'rgba(255,255,255,0.03)',
               border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: 16,
-              padding: 10,
+              padding: '10px 14px',
+              textAlign: 'center',
             }}>
-              <button
-                onClick={endBattle}
-                className="game-btn text-[10px] bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg"
-                style={{ width: '100%', paddingTop: 14, paddingBottom: 14 }}
-              >
-                ✓ Coletar Recompensa
-              </button>
+              <p style={{ color: '#9ca3af', fontSize: 11, fontWeight: 700 }}>
+                {expGainText !== null ? 'Atualizando EXP...' : 'Voltando em instantes...'}
+              </p>
             </div>
           </div>
         )}
 
-        <div style={{ padding: '14px 24px 16px 24px' }}>
+        <div style={{ padding: '10px 24px 16px 24px' }}>
           <div style={{
             background: 'rgba(255,255,255,0.03)',
             border: '1px solid rgba(255,255,255,0.08)',

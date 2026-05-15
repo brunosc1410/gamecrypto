@@ -1,31 +1,62 @@
 import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { Pet } from '../types/game';
+import { Pet, PetElement } from '../types/game';
 import { PetCard } from './PetSprite';
 import PetDetail from './PetDetail';
 import ActivePetBadge from './ActivePetBadge';
+
+const RARITY_ORDER: Record<string, number> = { legendary: 4, epic: 3, rare: 2, common: 1 };
+
+function petPower(p: Pet) {
+  return p.stats.maxHp + p.stats.attack * 2 + p.stats.defense * 1.5 + p.stats.speed * 1.2 + p.stats.level * 10;
+}
+
+type FilterRarity = 'all' | 'common' | 'rare' | 'epic' | 'legendary';
+type FilterElement = 'all' | PetElement;
+
+const RARITY_FILTERS: { key: FilterRarity; label: string; color: string }[] = [
+  { key: 'all', label: 'Todos', color: '#9ca3af' },
+  { key: 'legendary', label: '🌟', color: '#f59e0b' },
+  { key: 'epic', label: '💜', color: '#a855f7' },
+  { key: 'rare', label: '💙', color: '#3b82f6' },
+  { key: 'common', label: '⬜', color: '#6b7280' },
+];
+
+const ELEMENT_FILTERS: { key: FilterElement; emoji: string }[] = [
+  { key: 'all', emoji: '📖' },
+  { key: 'fire', emoji: '🔥' },
+  { key: 'water', emoji: '💧' },
+  { key: 'grass', emoji: '🌿' },
+  { key: 'electric', emoji: '⚡' },
+  { key: 'dark', emoji: '🌑' },
+  { key: 'ice', emoji: '❄️' },
+];
 
 export default function Collection() {
   const { pets, selectedPetId, selectPet, setScreen, coins, cryptoBalls } = useGameStore();
   const [viewMode, setViewMode] = useState<'grid' | 'detail'>('grid');
   const [actionPet, setActionPet] = useState<Pet | null>(null);
+  const [filterRarity, setFilterRarity] = useState<FilterRarity>('all');
+  const [filterElement, setFilterElement] = useState<FilterElement>('all');
   const selectedPet = pets.find((p) => p.id === selectedPetId);
-  const orderedPets = [...pets].sort((a, b) => {
+
+  // Filter
+  let filtered = [...pets];
+  if (filterRarity !== 'all') filtered = filtered.filter(p => p.rarity === filterRarity);
+  if (filterElement !== 'all') filtered = filtered.filter(p => p.element === filterElement);
+
+  // Sort: selected first, then by power (strongest first)
+  filtered.sort((a, b) => {
     if (a.id === selectedPetId) return -1;
     if (b.id === selectedPetId) return 1;
-    return 0;
+    const ra = RARITY_ORDER[a.rarity] ?? 0;
+    const rb = RARITY_ORDER[b.rarity] ?? 0;
+    if (rb !== ra) return rb - ra;
+    return petPower(b) - petPower(a);
   });
 
-  const handleViewPet = (pet: Pet) => {
-    selectPet(pet.id);
-    setActionPet(null);
-    setViewMode('detail');
-  };
-
-  const handleSetActive = (pet: Pet) => {
-    selectPet(pet.id);
-    setActionPet(null);
-  };
+  const handleViewPet = (pet: Pet) => { selectPet(pet.id); setActionPet(null); setViewMode('detail'); };
+  const handleSetActive = (pet: Pet) => { selectPet(pet.id); setActionPet(null); };
 
   if (viewMode === 'detail' && selectedPet) {
     return (
@@ -38,104 +69,81 @@ export default function Collection() {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0b0b20' }}>
       {/* Header */}
-      <div
-        style={{
-          padding: '16px 40px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexShrink: 0,
-          background: '#111128',
-          borderBottom: '1px solid #252550',
-        }}
-      >
-        <button
-          onClick={() => setScreen('menu')}
-          style={{
-            color: '#eab308',
-            fontWeight: 700,
-            fontSize: 14,
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 0,
-            lineHeight: 1.2,
-          }}
-        >
-          ← Menu
-        </button>
-
-        <span style={{ color: '#eab308', fontWeight: 700, fontSize: 17 }}>📋 Coleção</span>
-
-        <div style={{ display: 'flex', gap: 12, fontSize: 12, fontWeight: 700 }}>
+      <div style={{ padding: '16px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: '#111128', borderBottom: '1px solid #252550' }}>
+        <button onClick={() => setScreen('menu')} style={{ color: '#eab308', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer' }}>← Menu</button>
+        <span style={{ color: '#eab308', fontWeight: 700, fontSize: 17 }}>🐾 Meus PETS</span>
+        <div style={{ display: 'flex', gap: 10, fontSize: 12, fontWeight: 700 }}>
           <span style={{ color: '#eab308' }}>💰{coins}</span>
           <span style={{ color: '#06b6d4' }}>🔮{cryptoBalls}</span>
         </div>
       </div>
 
-      {/* Selected pet spotlight */}
+      {/* Active pet */}
       {selectedPet && (
-        <div style={{ padding: '12px 28px 0 28px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ padding: '10px 28px 0 28px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
           <div style={{
             background: 'linear-gradient(135deg, rgba(250,204,21,0.10), rgba(17,17,40,1))',
-            border: '1px solid rgba(250,204,21,0.35)',
-            borderRadius: 16,
-            padding: '8px 10px',
-            boxShadow: '0 0 14px rgba(250,204,21,0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            maxWidth: 260,
-            width: '100%',
-            justifyContent: 'center',
+            border: '1px solid rgba(250,204,21,0.35)', borderRadius: 16,
+            padding: '8px 10px', boxShadow: '0 0 14px rgba(250,204,21,0.08)',
+            display: 'flex', alignItems: 'center', gap: 10, maxWidth: 260, width: '100%', justifyContent: 'center',
           }}>
             <ActivePetBadge size="small" />
-            <div style={{
-              padding: '4px 8px', borderRadius: 999,
-              background: 'rgba(250,204,21,0.12)', border: '1px solid rgba(250,204,21,0.25)',
-              color: '#fde68a', fontSize: 9, fontWeight: 700, whiteSpace: 'nowrap'
-            }}>
-              ATIVO
-            </div>
+            <div style={{ padding: '4px 8px', borderRadius: 999, background: 'rgba(250,204,21,0.12)', border: '1px solid rgba(250,204,21,0.25)', color: '#fde68a', fontSize: 9, fontWeight: 700 }}>ATIVO</div>
           </div>
         </div>
       )}
 
+      {/* Filters */}
+      <div style={{ padding: '10px 24px 6px 24px', flexShrink: 0 }}>
+        {/* Rarity filter */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
+          {RARITY_FILTERS.map(f => {
+            const active = filterRarity === f.key;
+            return (
+              <button key={f.key} onClick={() => setFilterRarity(f.key)} className="active:scale-90 transition-transform" style={{
+                padding: '6px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                background: active ? `${f.color}20` : 'rgba(255,255,255,0.03)',
+                border: active ? `2px solid ${f.color}50` : '1px solid rgba(255,255,255,0.06)',
+                color: active ? f.color : '#6b7280',
+              }}>{f.label}</button>
+            );
+          })}
+        </div>
+        {/* Element filter */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 5 }}>
+          {ELEMENT_FILTERS.map(f => {
+            const active = filterElement === f.key;
+            return (
+              <button key={f.key} onClick={() => setFilterElement(f.key)} className="active:scale-90 transition-transform" style={{
+                padding: '5px 8px', borderRadius: 8, fontSize: 14, cursor: 'pointer',
+                background: active ? 'rgba(6,182,212,0.15)' : 'rgba(255,255,255,0.03)',
+                border: active ? '2px solid rgba(6,182,212,0.4)' : '1px solid rgba(255,255,255,0.06)',
+              }}>{f.emoji}</button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Content */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          WebkitOverflowScrolling: 'touch',
-          scrollbarWidth: 'none',
-        } as React.CSSProperties}
-      >
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' } as React.CSSProperties}>
         <style>{`.collection-scroll::-webkit-scrollbar{display:none}`}</style>
-
-        <div className="collection-scroll" style={{ padding: '24px 36px 28px 36px' }}>
-          <p style={{ color: '#9ca3af', fontSize: 13, textAlign: 'center', marginBottom: 20 }}>
-            {pets.length} pets na coleção
+        <div className="collection-scroll" style={{ padding: '16px 28px 28px 28px' }}>
+          <p style={{ color: '#6b7280', fontSize: 12, textAlign: 'center', marginBottom: 14 }}>
+            {filtered.length} de {pets.length} pets
           </p>
-
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 14 }}>
-            {orderedPets.map((pet) => (
-              <PetCard
-                key={pet.id}
-                pet={pet}
-                size={168}
-                onClick={() => setActionPet(pet)}
-                selected={pet.id === selectedPetId}
-              />
+            {filtered.map((pet) => (
+              <PetCard key={pet.id} pet={pet} size={176} onClick={() => setActionPet(pet)} selected={pet.id === selectedPetId} />
             ))}
           </div>
-
-          {/* breathing room before footer */}
+          {filtered.length === 0 && (
+            <p style={{ color: '#4b5563', fontSize: 14, textAlign: 'center', marginTop: 40 }}>Nenhum pet encontrado com esse filtro.</p>
+          )}
           <div style={{ height: 28 }} />
         </div>
       </div>
 
-      {/* Pet action modal */}
+      {/* Action modal */}
       {actionPet && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.62)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ width: '100%', maxWidth: 300, background: '#111128', border: '1px solid #252550', borderRadius: 20, padding: 20, textAlign: 'center' }}>
@@ -151,42 +159,16 @@ export default function Collection() {
       )}
 
       {/* Bottom nav */}
-      <div
-        style={{
-          flexShrink: 0,
-          background: '#111128',
-          borderTop: '1px solid #252550',
-          padding: '16px 24px 18px 24px',
-          display: 'flex',
-          justifyContent: 'center',
-          gap: 8,
-          boxShadow: '0 -10px 24px rgba(0,0,0,0.28)',
-        }}
-      >
+      <div style={{ flexShrink: 0, background: '#111128', borderTop: '1px solid #252550', padding: '14px 24px 16px 24px', display: 'flex', justifyContent: 'center', gap: 8, boxShadow: '0 -10px 24px rgba(0,0,0,0.28)' }}>
         {[
           { l: '🗺️ Explorar', bg: 'linear-gradient(90deg,#16a34a,#22c55e)', s: 'menu' as const },
           { l: '📕 Codex', bg: 'linear-gradient(90deg,#b91c1c,#dc2626)', s: 'codex' as const },
           { l: '🛒 Loja', bg: 'linear-gradient(90deg,#7c3aed,#8b5cf6)', s: 'shop' as const },
         ].map((b, i) => (
-          <button
-            key={i}
-            onClick={() => setScreen(b.s)}
-            style={{
-              padding: '10px 14px',
-              background: b.bg,
-              border: 'none',
-              borderRadius: 10,
-              color: 'white',
-              fontSize: 10,
-              fontWeight: 700,
-              cursor: 'pointer',
-              fontFamily: "'Press Start 2P', system-ui",
-              lineHeight: 1.2,
-            }}
-            className="active:scale-95 transition-transform"
-          >
-            {b.l}
-          </button>
+          <button key={i} onClick={() => setScreen(b.s)} style={{
+            padding: '10px 14px', background: b.bg, border: 'none', borderRadius: 10, color: 'white',
+            fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: "'Press Start 2P', system-ui", lineHeight: 1.2,
+          }} className="active:scale-95 transition-transform">{b.l}</button>
         ))}
       </div>
     </div>

@@ -1,5 +1,8 @@
 import React from 'react';
 import { Pet } from '../types/game';
+import { CUSTOM_SPRITE_OVERRIDES, CUSTOM_SPRITE_SHEETS, CUSTOM_POSE_OVERRIDES } from '../data/customSpriteOverrides';
+import { FlamarionDragon, AqualisDragon, VerdexDragon, VoltixDragon, UmbrixDragon, GlaciusDragon } from './DragonStarterSprites';
+import SpriteSheetPet from './SpriteSheetPet';
 
 const STARTERS = ['Flamarion','Aqualis','Verdex','Voltix','Umbrix','Glacius'];
 
@@ -303,8 +306,12 @@ function GlaciusSVG() {
 }
 
 const SVG_MAP: Record<string, () => React.JSX.Element> = {
-  Flamarion: FlamarionSVG, Aqualis: AqualisSVG, Verdex: VerdexSVG,
-  Voltix: VoltixSVG, Umbrix: UmbrixSVG, Glacius: GlaciusSVG,
+  Flamarion: FlamarionDragon,
+  Aqualis: AqualisDragon,
+  Verdex: VerdexDragon,
+  Voltix: VoltixDragon,
+  Umbrix: UmbrixDragon,
+  Glacius: GlaciusDragon,
 };
 
 // ===== PARTICLES =====
@@ -326,6 +333,8 @@ export default function PetSprite({ pet, size = 120, animate = true, showParticl
   const isStarter = STARTERS.includes(pet.name);
   const s = size;
   const Svg = SVG_MAP[pet.name];
+  const poseOverride = CUSTOM_POSE_OVERRIDES[pet.name];
+  const overrideSrc = poseOverride?.front || CUSTOM_SPRITE_OVERRIDES[pet.name];
 
   return (
     <div className="relative" style={{ width: s, height: s }}>
@@ -333,7 +342,17 @@ export default function PetSprite({ pet, size = 120, animate = true, showParticl
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="rounded-full" style={{ width:s*0.6,height:s*0.6, background:`radial-gradient(circle,${pet.colors.primary}30,transparent 70%)`, filter:'blur(10px)' }}/>
       </div>
-      {Svg ? (
+      {poseOverride ? (
+        <img src={poseOverride.front || ''} alt={pet.name} className={`w-full h-full object-contain relative z-10 ${animate ? 'anim-generic-idle' : ''}`} style={{ filter: `drop-shadow(0 0 6px ${pet.colors.primary}45)` }} />
+      ) : overrideSrc ? (
+        CUSTOM_SPRITE_SHEETS[pet.name] ? (
+          <div className={`relative z-10 ${animate ? 'anim-generic-idle' : ''}`}>
+            <SpriteSheetPet petName={pet.name} src={overrideSrc} pose="front" size={s} style={{ filter: `drop-shadow(0 0 6px ${pet.colors.primary}45)` }} />
+          </div>
+        ) : (
+          <img src={overrideSrc} alt={pet.name} className={`w-full h-full object-contain relative z-10 ${animate ? 'anim-generic-idle' : ''}`} style={{ filter: `drop-shadow(0 0 6px ${pet.colors.primary}45)` }} />
+        )
+      ) : Svg ? (
         <div className={`w-full h-full relative z-10 ${!animate?'':''.trim()}`} style={{ filter:`drop-shadow(0 0 8px ${pet.colors.primary}50)` }}>
           <Svg />
         </div>
@@ -358,9 +377,21 @@ const ELEM_EMOJI: Record<string,string> = { fire:'🔥', water:'💧', grass:'�
 const RARITY_BORDER: Record<string,string> = { common:'#8a8a8a', rare:'#4a9eff', epic:'#c06eff', legendary:'#ffb830' };
 const RARITY_GLOW: Record<string,string> = { common:'none', rare:'0 0 8px #4a9eff40', epic:'0 0 12px #c06eff50', legendary:'0 0 16px #ffb83060' };
 
+const CARD_TUNE: Record<string, { y: number; width: number }> = {
+  Flamarion: { y: 8, width: 0.40 },
+  Aqualis: { y: 9, width: 0.40 },
+  Verdex: { y: 10, width: 0.40 },
+  Voltix: { y: 8, width: 0.40 },
+  Umbrix: { y: 8, width: 0.40 },
+  Glacius: { y: 9, width: 0.40 },
+};
+
 export function PetCard({ pet, size=160, onClick, selected=false }: { pet:Pet; size?:number; onClick?:()=>void; selected?:boolean; }) {
   const Svg = SVG_MAP[pet.name];
+  const poseOverride = CUSTOM_POSE_OVERRIDES[pet.name];
+  const overrideSrc = poseOverride?.front || CUSTOM_SPRITE_OVERRIDES[pet.name];
   const isStarter = STARTERS.includes(pet.name);
+  const tune = CARD_TUNE[pet.name] ?? { y: 8, width: 0.40 };
   const bdr = RARITY_BORDER[pet.rarity] ?? '#8a8a8a';
   const w = size;
   const h = size * 1.4;
@@ -392,22 +423,32 @@ export function PetCard({ pet, size=160, onClick, selected=false }: { pet:Pet; s
 
       {/* === ART FRAME === */}
       <div className="mx-2 relative rounded-lg overflow-hidden" style={{
-        height: h * 0.42,
+        height: h * 0.44,
         border: `2px solid ${bdr}50`,
         background: ELEM_BG[pet.element],
       }}>
         {/* Particles behind pet */}
-        {isStarter && <Particles element={pet.element} size={h * 0.42} />}
+        {isStarter && <Particles element={pet.element} size={h * 0.44} />}
         {/* Glow */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="rounded-full" style={{ width:'60%',height:'60%', background:`radial-gradient(circle,${pet.colors.primary}25,transparent 70%)`, filter:'blur(8px)' }}/>
+          <div className="rounded-full" style={{ width:'62%',height:'62%', background:`radial-gradient(circle,${pet.colors.primary}25,transparent 70%)`, filter:'blur(8px)' }}/>
         </div>
-        {/* Pet */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          {Svg ? (
-            <div style={{ width: h*0.32, height: h*0.32, filter:`drop-shadow(0 0 6px ${pet.colors.primary}50)` }}><Svg/></div>
+        {/* Pet — anchored to bottom, standardized */}
+        <div className="absolute inset-0" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 0 }}>
+          {poseOverride ? (
+            <img src={poseOverride.front || ''} alt={pet.name} className="anim-generic-idle" style={{ width: h * tune.width, height: h * tune.width, objectFit: 'contain', transform: `translateY(${tune.y}px)`, transformOrigin: 'bottom center', filter: `drop-shadow(0 0 7px ${pet.colors.primary}45)` }} />
+          ) : overrideSrc ? (
+            CUSTOM_SPRITE_SHEETS[pet.name] ? (
+              <div className="anim-generic-idle" style={{ transform: `translateY(${tune.y}px)`, transformOrigin: 'bottom center' }}>
+                <SpriteSheetPet petName={pet.name} src={overrideSrc} pose="front" size={h * tune.width} style={{ filter: `drop-shadow(0 0 7px ${pet.colors.primary}45)` }} />
+              </div>
+            ) : (
+              <img src={overrideSrc} alt={pet.name} className="anim-generic-idle" style={{ width: h * tune.width, height: h * tune.width, objectFit: 'contain', transform: `translateY(${tune.y}px)`, transformOrigin: 'bottom center', filter: `drop-shadow(0 0 7px ${pet.colors.primary}45)` }} />
+            )
+          ) : Svg ? (
+            <div style={{ width: h * tune.width, transform: `translateY(${tune.y}px)`, transformOrigin: 'bottom center', filter:`drop-shadow(0 0 7px ${pet.colors.primary}50)` }}><Svg/></div>
           ) : (
-            <img src={pet.image} alt={pet.name} className="anim-generic-idle" style={{ width:h*0.3, height:h*0.3, objectFit:'contain', mixBlendMode:'screen', filter:`drop-shadow(0 0 6px ${pet.colors.primary}50) saturate(1.3) brightness(1.15)` }}/>
+            <img src={pet.image} alt={pet.name} className="anim-generic-idle" style={{ width:h*tune.width, height:h*tune.width, objectFit:'contain', transform: `translateY(${tune.y}px)`, transformOrigin: 'bottom center', mixBlendMode:'screen', filter:`drop-shadow(0 0 7px ${pet.colors.primary}50) saturate(1.3) brightness(1.15)` }}/>
           )}
         </div>
         {/* NFT badge */}
@@ -415,44 +456,42 @@ export function PetCard({ pet, size=160, onClick, selected=false }: { pet:Pet; s
       </div>
 
       {/* === RARITY + TYPE BAR === */}
-      <div className="flex items-center justify-between px-2.5 mt-1.5">
+      <div className="flex items-center justify-between px-2.5 mt-1">
         <span className="text-[8px] font-bold px-2 py-0.5 rounded-full" style={{
           color: bdr, backgroundColor: bdr + '18', border: `1px solid ${bdr}30`,
         }}>{pet.rarity.toUpperCase()}</span>
         <span className="text-gray-500 text-[8px]">{pet.wins}W / {pet.losses}L</span>
       </div>
 
-      {/* === ATTACKS / STATS === */}
-      <div className="px-2.5 mt-1.5 space-y-1">
-        {/* Attack 1 */}
-        <div className="flex items-center justify-between bg-white/5 rounded-lg px-2 py-1">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs">{ELEM_EMOJI[pet.element]}</span>
-            <span className="text-white text-[9px] font-semibold">Ataque</span>
+      {/* === COMPACT STATS ROW === */}
+      <div style={{ padding: '0 10px', marginTop: 4 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, marginBottom: 6 }}>
+          <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '4px 0', textAlign: 'center' }}>
+            <span style={{ color: '#fb923c', fontSize: 9, fontWeight: 700 }}>⚔ {pet.stats.attack}</span>
           </div>
-          <span className="text-orange-400 text-[10px] font-bold">{pet.stats.attack}</span>
-        </div>
-        {/* Defense */}
-        <div className="flex items-center justify-between bg-white/5 rounded-lg px-2 py-1">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs">🛡️</span>
-            <span className="text-white text-[9px] font-semibold">Defesa</span>
+          <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '4px 0', textAlign: 'center' }}>
+            <span style={{ color: '#60a5fa', fontSize: 9, fontWeight: 700 }}>🛡 {pet.stats.defense}</span>
           </div>
-          <span className="text-blue-400 text-[10px] font-bold">{pet.stats.defense}</span>
+          <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '4px 0', textAlign: 'center' }}>
+            <span style={{ color: '#facc15', fontSize: 9, fontWeight: 700 }}>💨 {pet.stats.speed}</span>
+          </div>
         </div>
-      </div>
 
-      {/* === BOTTOM: Speed + EXP bar === */}
-      <div className="px-2.5 mt-1.5 flex items-center gap-2">
-        <div className="flex items-center gap-1">
-          <span className="text-[9px]">💨</span>
-          <span className="text-yellow-400 text-[9px] font-bold">{pet.stats.speed}</span>
+        {/* HP bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+          <span style={{ color: '#f87171', fontSize: 7, fontWeight: 700, flexShrink: 0 }}>HP</span>
+          <div style={{ flex: 1, height: 4, background: '#1f2937', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${pet.colors.primary}, ${pet.colors.accent})`, width: `${(pet.stats.hp / pet.stats.maxHp) * 100}%` }} />
+          </div>
         </div>
-        <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-          <div className="h-full rounded-full" style={{
-            width: `${(pet.stats.hp / pet.stats.maxHp) * 100}%`,
-            background: `linear-gradient(90deg, ${pet.colors.primary}, ${pet.colors.accent})`,
-          }}/>
+
+        {/* EXP bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ color: '#60a5fa', fontSize: 7, fontWeight: 700, flexShrink: 0 }}>EXP</span>
+          <div style={{ flex: 1, height: 3, background: '#1f2937', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ height: '100%', borderRadius: 99, background: '#60a5fa', width: `${(pet.stats.exp / pet.stats.expToNext) * 100}%` }} />
+          </div>
+          <span style={{ color: '#6b7280', fontSize: 6, fontWeight: 600, flexShrink: 0 }}>{pet.stats.exp}/{pet.stats.expToNext}</span>
         </div>
       </div>
 

@@ -1,9 +1,21 @@
 import React from 'react';
 import { Pet } from '../types/game';
+import { CUSTOM_SPRITE_OVERRIDES, CUSTOM_POSE_OVERRIDES, CUSTOM_SPRITE_SHEETS } from '../data/customSpriteOverrides';
+import { FlamarionDragon, AqualisDragon, VerdexDragon, VoltixDragon, UmbrixDragon, GlaciusDragon } from './DragonStarterSprites';
+import SpriteSheetPet from './SpriteSheetPet';
 
 // Simplified inline SVGs for battle (same designs, animations come from parent)
+const SVGS_OLD_UNUSED = null; void SVGS_OLD_UNUSED;
 const SVGS: Record<string, () => React.JSX.Element> = {
-  Flamarion: () => (<svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
+  Flamarion: FlamarionDragon,
+  Aqualis: AqualisDragon,
+  Verdex: VerdexDragon,
+  Voltix: VoltixDragon,
+  Umbrix: UmbrixDragon,
+  Glacius: GlaciusDragon,
+};
+const SVGS_OLD = {
+  _Flamarion: () => (<svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
     <ellipse cx="50" cy="62" rx="22" ry="20" fill="#ff6b35"/><ellipse cx="50" cy="60" rx="19" ry="17" fill="#ff8c52"/>
     <ellipse cx="50" cy="66" rx="13" ry="11" fill="#ffe0b2"/>
     <circle cx="50" cy="38" r="18" fill="#ff6b35"/><circle cx="50" cy="37" r="15" fill="#ff8c52"/>
@@ -32,20 +44,7 @@ const SVGS: Record<string, () => React.JSX.Element> = {
     <path d="M 26 64 Q 14 56 10 46 Q 16 53 13 44 Q 18 54 22 60 Z" fill="#5dade2"/>
     <ellipse cx="40" cy="80" rx="8" ry="4" fill="#3a7abd"/><ellipse cx="60" cy="80" rx="8" ry="4" fill="#3a7abd"/>
   </svg>),
-  Verdex: () => (<svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
-    <ellipse cx="50" cy="62" rx="21" ry="19" fill="#27ae60"/><ellipse cx="50" cy="60" rx="18" ry="16" fill="#2ecc71"/>
-    <ellipse cx="50" cy="65" rx="12" ry="10" fill="#a9dfbf"/>
-    <circle cx="50" cy="38" r="17" fill="#27ae60"/><circle cx="50" cy="37" r="14" fill="#2ecc71"/>
-    <path d="M 50 22 Q 40 8 50 2 Q 60 8 50 22 Z" fill="#1e8449"/><line x1="50" y1="4" x2="50" y2="22" stroke="#145a32" strokeWidth="1.2"/>
-    <path d="M 54 19 Q 65 6 72 14 Q 62 10 54 19 Z" fill="#27ae60"/>
-    <ellipse cx="42" cy="35" rx="4" ry="4.5" fill="white"/><ellipse cx="58" cy="35" rx="4" ry="4.5" fill="white"/>
-    <circle cx="43" cy="35" r="2.5" fill="#1a1a2e"/><circle cx="59" cy="35" r="2.5" fill="#1a1a2e"/>
-    <circle cx="44.5" cy="33.5" r="1" fill="white"/><circle cx="60.5" cy="33.5" r="1" fill="white"/>
-    <path d="M 44 42 Q 50 47 56 42" fill="none" stroke="#1e8449" strokeWidth="1.8" strokeLinecap="round"/>
-    <ellipse cx="30" cy="58" rx="6" ry="4" fill="#27ae60" transform="rotate(-20 30 58)"/>
-    <ellipse cx="70" cy="58" rx="6" ry="4" fill="#27ae60" transform="rotate(20 70 58)"/>
-    <ellipse cx="39" cy="80" rx="7" ry="4.5" fill="#219a52"/><ellipse cx="61" cy="80" rx="7" ry="4.5" fill="#219a52"/>
-  </svg>),
+  Verdex: VerdexDragon,
   Voltix: () => (<svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
     <ellipse cx="50" cy="62" rx="19" ry="17" fill="#f1c40f"/><ellipse cx="50" cy="60" rx="16" ry="14" fill="#f9e154"/>
     <ellipse cx="50" cy="65" rx="10" ry="8" fill="#fef9e7"/>
@@ -96,6 +95,37 @@ export function BattleSprite({ pet, className, style }: {
   pet: Pet; className?: string; style?: React.CSSProperties;
 }) {
   const Svg = SVGS[pet.name];
+  const poseOverride = CUSTOM_POSE_OVERRIDES[pet.name];
+  const overrideSrc = poseOverride ? undefined : CUSTOM_SPRITE_OVERRIDES[pet.name];
+  if (poseOverride) {
+    const isFaint = style?.filter?.includes('grayscale') ?? false;
+    const isEnemy = (style?.transform ?? '').includes('scaleX(-1)');
+    const pose = isFaint ? 'faint' : isEnemy ? 'side' : 'back';
+    const sz = className?.includes('w-32') ? 128 : className?.includes('w-28') ? 112 : className?.includes('w-36') ? 144 : className?.includes('w-40') ? 160 : 128;
+    return (
+      <div className={className} style={{ ...style }}>
+        <SpriteSheetPet petName={pet.name} src={poseOverride[pose] || poseOverride.front || ''} pose={pose} size={sz} style={{ filter: `drop-shadow(0 0 8px ${pet.colors.primary}55)` }} />
+      </div>
+    );
+  }
+  if (overrideSrc) {
+    const sheet = CUSTOM_SPRITE_SHEETS[pet.name];
+    if (sheet) {
+      const isFaint = style?.filter?.includes('grayscale') ?? false;
+      const isEnemy = (style?.transform ?? '').includes('scaleX(-1)');
+      const pose = isFaint ? 'faint' : isEnemy ? 'side' : 'back';
+      const sz = className?.includes('w-32') ? 128 : className?.includes('w-28') ? 112 : className?.includes('w-36') ? 144 : className?.includes('w-40') ? 160 : 128;
+      return (
+        <div className={className} style={{ ...style }}>
+          <SpriteSheetPet petName={pet.name} src={overrideSrc} pose={pose} size={sz} style={{ filter: `drop-shadow(0 0 8px ${pet.colors.primary}55)` }} />
+        </div>
+      );
+    }
+    return (
+      <img src={overrideSrc} alt={pet.name} className={className}
+        style={{ ...style, objectFit: 'contain', filter: `drop-shadow(0 0 8px ${pet.colors.primary}55) ${style?.filter || ''}` }} />
+    );
+  }
   if (Svg) {
     return (
       <div className={className} style={{ ...style, filter: `drop-shadow(0 0 8px ${pet.colors.primary}60) ${style?.filter||''}` }}>
